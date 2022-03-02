@@ -13,7 +13,7 @@ class ExperimentBuilder:
         self.script = os.path.join(str(Path.home()), script)
         os.environ['CUDA_VISIBLE_DEVICES'] = CUDA_VISIBLE_DEVICES
         self.add_param('dataset_path', dataset)
-        for k, v in defaults:
+        for k, v in defaults.items():
             self.add_param(k, v)
 
     def add_param(self, name, value):
