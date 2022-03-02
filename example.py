@@ -14,7 +14,7 @@ def main():
             batchsize=128,
             epochs=164,
             lr_decay_at=[82, 123]),
-        devices='7')
+        CUDA_VISIBLE_DEVICES='7')
 
     eb.add_param('grads', 128)
     eb.add_param('momentum', 0)

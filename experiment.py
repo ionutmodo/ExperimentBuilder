@@ -3,15 +3,15 @@ from pathlib import Path
 
 
 class ExperimentBuilder:
-    def __init__(self, script, dataset, defaults, devices):
+    def __init__(self, script, dataset, defaults, CUDA_VISIBLE_DEVICES):
         """
         @param script: path to script, rooted in home directory (it's automatically inserted as prefix)
         @param dataset: absolute path to dataset folder
         @param defaults: default cmd arguments that usually stay fixed
-        @param devices: value to initialize CUDA_VISIBLE_DEVICES env variable
+        @param CUDA_VISIBLE_DEVICES: value to initialize CUDA_VISIBLE_DEVICES env variable
         """
         self.script = os.path.join(str(Path.home()), script)
-        os.environ['CUDA_VISIBLE_DEVICES'] = devices
+        os.environ['CUDA_VISIBLE_DEVICES'] = CUDA_VISIBLE_DEVICES
         self.add_param('dataset_path', dataset)
         for k, v in defaults:
             self.add_param(k, v)
