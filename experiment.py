@@ -21,14 +21,14 @@ class ExperimentBuilder:
             value = ' '.join(map(str, value))
         setattr(self, f'_{name}', value)
 
-    def run(self, exp_folder, exp_name):
-        save_folder = os.path.join(str(Path.home()), exp_folder, exp_name)
-        log_file_path = os.path.join(save_folder, f'output_{exp_name}.txt')
+    def run(self, exp_folder, exp_name, param_name_for_exp_root_folder):
+        exp_root_folder = os.path.join(str(Path.home()), exp_folder, exp_name)
+        # log_file_path = os.path.join(exp_root_folder, f'output_{exp_name}.txt')
 
-        os.makedirs(save_folder, exist_ok=True)
+        os.makedirs(exp_root_folder, exist_ok=True)
 
-        self.add_param('save', save_folder)
-        self.add_param('log_file_path', log_file_path)
+        self.add_param(param_name_for_exp_root_folder, exp_root_folder)
+        # self.add_param('log_file_path', log_file_path)
 
         os.system('clear')
         os.system(self._build_command())
