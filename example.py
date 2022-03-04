@@ -13,6 +13,7 @@ def main():
             seed=0,
             batchsize=128,
             epochs=164,
+            use_cuda=False,
             lr_decay_at=[82, 123]),
         CUDA_VISIBLE_DEVICES='7')
 
@@ -29,6 +30,7 @@ def main():
                 eb.add_param('k', k)
                 eb.add_param('compress_gradients', cg)
                 eb.run(
+                    debug=True,
                     exp_folder=f'workplace/experiments_resnet_cifar10/MDA/extra_exps_28feb/'
                                f'{eb.optim}-{eb.pca_optim_method}-{eb.pca_optim_warmup_steps}',
                     exp_name='-'.join([
@@ -41,7 +43,8 @@ def main():
                         f'lr={eb.lr}',
                         f'damp={eb.damp}',
                         f'grads={eb.grads}',
-                        f'seed={eb.seed}']))
+                        f'seed={eb.seed}']),
+                    param_name_for_exp_root_folder='save')
 
 
 if __name__ == '__main__':
