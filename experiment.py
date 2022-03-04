@@ -20,7 +20,7 @@ class ExperimentBuilder:
     def add_param(self, name, value):
         if isinstance(value, list):
             value = ' '.join(map(str, value))
-        setattr(self, f'_{name}', str(value))
+        setattr(self, f'_{name}', value)
 
     def run(self, exp_folder, exp_name, param_name_for_exp_root_folder, debug=False):
         exp_root_folder = os.path.join(str(Path.home()), exp_folder, exp_name)
@@ -51,7 +51,7 @@ class ExperimentBuilder:
                     if v:
                         params.append(f'--{k}')
                 else:
-                    params.append(f'--{k} {v}')
+                    params.append(f'--{k} {str(v)}')
         params = ' '.join(params).replace('--_', '--')
         return f'{cvd}={os.environ[cvd]} python {self.script} {params}'
 

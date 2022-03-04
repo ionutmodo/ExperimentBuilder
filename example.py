@@ -13,7 +13,7 @@ def main():
             seed=0,
             batchsize=128,
             epochs=164,
-            use_cuda=False,
+            use_cuda=True,
             lr_decay_at=[82, 123]),
         CUDA_VISIBLE_DEVICES='7')
 
