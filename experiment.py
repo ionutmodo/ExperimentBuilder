@@ -33,6 +33,8 @@ class ExperimentBuilder:
         os.system('clear')
         os.system(self._build_command())
 
+        print('ended', exp_name)
+
     def _build_command(self):
         cvd = 'CUDA_VISIBLE_DEVICES'
         params = ' '.join(
