@@ -12,6 +12,8 @@ class ExperimentBuilder:
         @param CUDA_VISIBLE_DEVICES: value to initialize CUDA_VISIBLE_DEVICES env variable
         """
         self.script = os.path.join(str(Path.home()), script)
+        self.devices = CUDA_VISIBLE_DEVICES
+
         os.environ['CUDA_VISIBLE_DEVICES'] = CUDA_VISIBLE_DEVICES
         self.add_param('dataset_path', dataset)
         for k, v in defaults.items():
