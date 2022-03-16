@@ -15,7 +15,10 @@ class ExperimentBuilder:
         self.devices = CUDA_VISIBLE_DEVICES
 
         os.environ['CUDA_VISIBLE_DEVICES'] = CUDA_VISIBLE_DEVICES
-        self.add_param('dataset_path', dataset)
+
+        if dataset is not None:  # some experiments may not require this parameter explicitly
+            self.add_param('dataset_path', dataset)
+
         for k, v in defaults.items():
             self.add_param(k, v)
 
