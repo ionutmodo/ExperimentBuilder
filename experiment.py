@@ -23,7 +23,14 @@ class ExperimentBuilder:
         setattr(self, f'_{name}', value)
 
     def run(self, exp_folder, exp_name, param_name_for_exp_root_folder, debug=False):
-        exp_root_folder = os.path.join(str(Path.home()), exp_folder, exp_name)
+        """
+        :param exp_folder: absolute path of the root folder where you want your experiments to be
+        :param exp_name: folder name for the experiment
+        :param param_name_for_exp_root_folder: the cmd argument name for the output directory
+        :param debug:
+        :return:
+        """
+        exp_root_folder = os.path.join(exp_folder, exp_name)
         # log_file_path = os.path.join(exp_root_folder, f'output_{exp_name}.txt')
 
         os.makedirs(exp_root_folder, exist_ok=True)
