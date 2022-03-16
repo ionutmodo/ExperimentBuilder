@@ -4,10 +4,9 @@ import os
 
 
 class ExperimentBuilder:
-    def __init__(self, script, dataset, defaults, CUDA_VISIBLE_DEVICES):
+    def __init__(self, script, defaults, CUDA_VISIBLE_DEVICES):
         """
         @param script: path to script, rooted in home directory (it's automatically inserted as prefix)
-        @param dataset: absolute path to dataset folder
         @param defaults: default cmd arguments that usually stay fixed
         @param CUDA_VISIBLE_DEVICES: value to initialize CUDA_VISIBLE_DEVICES env variable
         """
@@ -15,9 +14,6 @@ class ExperimentBuilder:
         self.devices = CUDA_VISIBLE_DEVICES
 
         os.environ['CUDA_VISIBLE_DEVICES'] = CUDA_VISIBLE_DEVICES
-
-        if dataset is not None:  # some experiments may not require this parameter explicitly
-            self.add_param('dataset_path', dataset)
 
         for k, v in defaults.items():
             self.add_param(k, v)
