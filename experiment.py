@@ -41,6 +41,7 @@ class ExperimentBuilder:
             os.system(cmd)
 
         print('ended', exp_name)
+        print(cmd)
 
     def _build_command(self):
         cvd = 'CUDA_VISIBLE_DEVICES'
