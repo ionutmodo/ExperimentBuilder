@@ -12,12 +12,7 @@ class ExperimentBuilder:
         """
         self.devices = CUDA_VISIBLE_DEVICES
         os.environ['CUDA_VISIBLE_DEVICES'] = CUDA_VISIBLE_DEVICES
-        home = str(Path.home())
-
-        if script.startswith(home):
-            self.script = script
-        else:
-            self.script = os.path.join(home, script)
+        self.script = script
 
         for k, v in defaults.items():
             self.add_param(k, v)
