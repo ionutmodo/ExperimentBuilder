@@ -1,4 +1,4 @@
-from pathlib import Path
+import multiprocessing as mp
 import sys
 import os
 
@@ -22,11 +22,16 @@ class ExperimentBuilder:
             value = ' '.join(map(str, value))
         setattr(self, f'_{name}', value)
 
-    def run(self, exp_folder, exp_name, param_name_for_exp_root_folder, debug=False):
+    def run(self, exp_folder, exp_name, param_name_for_exp_root_folder, parallelize_dict=None, debug=False):
         """
         :param exp_folder: absolute path of the root folder where you want your experiments to be
         :param exp_name: folder name for the experiment
         :param param_name_for_exp_root_folder: the cmd argument name for the output directory
+        :param parallelize_dict: a dictionary. Example {'workers': int, 'param': str, 'values': list)
+            - workers is the number of workers for the process pool
+            - param is the parameter to parallelize over
+            - values is the list of values for the parameter to be run in parallel using multiprocessing
+            This is teste only for CPU device
         :param debug:
         :return:
         """
@@ -41,14 +46,26 @@ class ExperimentBuilder:
         if ('linux' in sys.platform) or ('darwin' in sys.platform):
             os.system('clear')
 
-        cmd = self._build_command()
-        if debug:
+        if parallelize_dict is None:  # run a single process
+            cmd = self._build_command()
+            if debug:
+                print(cmd)
+            else:
+                os.system(cmd)
+
+            print('ended', exp_name)
             print(cmd)
         else:
-            os.system(cmd)
+            cmds = []
+            for v in parallelize_dict['values']:
+                self.add_param(parallelize_dict['param'], v)
+                cmds.append(self._build_command())
+            if debug:
+                for cmd in cmds:
+                    print(cmd)
+            with mp.Pool(processes=parallelize_dict['workers']) as pool:
+                pool.map(func=os.system, iterable=cmds)
 
-        print('ended', exp_name)
-        print(cmd)
 
     def _build_command(self):
         cvd = 'CUDA_VISIBLE_DEVICES'
