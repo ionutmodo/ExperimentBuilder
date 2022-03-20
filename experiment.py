@@ -1,4 +1,5 @@
 import multiprocessing as mp
+from string import Template
 import sys
 import os
 
@@ -22,10 +23,11 @@ class ExperimentBuilder:
             value = ' '.join(map(str, value))
         setattr(self, f'_{name}', value)
 
-    def run(self, exp_folder, exp_name, param_name_for_exp_root_folder, parallelize_dict=None, debug=False):
+    def run(self, exp_folder: str, exp_name: str, param_name_for_exp_root_folder: str, parallelize_dict:dict=None, debug:bool=False):
         """
         :param exp_folder: absolute path of the root folder where you want your experiments to be
-        :param exp_name: folder name for the experiment
+        :param exp_name: template string that will be given as input to Template
+            The placeholders name should be the parameter names added using add_param method
         :param param_name_for_exp_root_folder: the cmd argument name for the output directory
         :param parallelize_dict: a dictionary. Example {'workers': int, 'param': str, 'values': list)
             - workers is the number of workers for the process pool
@@ -35,14 +37,6 @@ class ExperimentBuilder:
         :param debug:
         :return:
         """
-        exp_root_folder = os.path.join(exp_folder, exp_name)
-        # log_file_path = os.path.join(exp_root_folder, f'output_{exp_name}.txt')
-
-        os.makedirs(exp_root_folder, exist_ok=True)
-
-        self.add_param(param_name_for_exp_root_folder, exp_root_folder)
-        # self.add_param('log_file_path', log_file_path)
-
         if ('linux' in sys.platform) or ('darwin' in sys.platform):
             os.system('clear')
 
@@ -51,6 +45,7 @@ class ExperimentBuilder:
             if debug:
                 print(cmd)
             else:
+                self._create_folder_arg_and_makedir(param_name_for_exp_root_folder, exp_folder, exp_name)
                 os.system(cmd)
 
             print('ended', exp_name)
@@ -59,6 +54,7 @@ class ExperimentBuilder:
             cmds = []
             for v in parallelize_dict['values']:
                 self.add_param(parallelize_dict['param'], v)
+                self._create_folder_arg_and_makedir(param_name_for_exp_root_folder, exp_folder, exp_name)
                 cmds.append(self._build_command())
             if debug:
                 for cmd in cmds:
@@ -66,15 +62,29 @@ class ExperimentBuilder:
             with mp.Pool(processes=parallelize_dict['workers']) as pool:
                 pool.map(func=os.system, iterable=cmds)
 
+    def _create_folder_arg_and_makedir(self, param_name_for_exp_root_folder, exp_folder, exp_name):
+        exp_root_folder = os.path.join(exp_folder, self._fill_template(exp_name))
+        os.makedirs(exp_root_folder, exist_ok=True)
+        self.add_param(param_name_for_exp_root_folder, exp_root_folder)
+
+    def _fill_template(self, template):
+        return template.substitute(**{
+            key[1:]: val
+            for key, val in self.__dict__.items()
+            if key.startswith('_')
+        })
 
     def _build_command(self):
         cvd = 'CUDA_VISIBLE_DEVICES'
         params = []
         for k, v in self.__dict__.items():
             if k.startswith('_'):
-                if isinstance(v, bool): # we have a parameter that does not have a value, but its presence or absence means True or False
+                if isinstance(v, bool):  # we have a parameter that does not have a value, but its presence or absence means True or False
                     if v:
                         params.append(f'--{k}')
+                elif isinstance(v, Template):
+                    # elif isinstance(v, str) and '${' in v:
+                    params.append(f'--{k} {self._fill_template(v)}')
                 else:
                     params.append(f'--{k} {str(v)}')
         params = ' '.join(params).replace('--_', '--')
