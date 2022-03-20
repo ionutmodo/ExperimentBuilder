@@ -30,7 +30,7 @@ class ExperimentBuilder:
             The placeholders name should be the parameter names added using add_param method
         :param param_name_for_exp_root_folder: the cmd argument name for the output directory
         :param parallelize_dict: a dictionary. Example {'workers': int, 'param': str, 'values': list)
-            - workers is the number of workers for the process pool
+            - workers is the number of workers for the process pool. Set it to zero to launch one process per parameter
             - param is the parameter to parallelize over
             - values is the list of values for the parameter to be run in parallel using multiprocessing
             This is teste only for CPU device
@@ -59,7 +59,9 @@ class ExperimentBuilder:
             if debug:
                 for cmd in cmds:
                     print(cmd)
-            with mp.Pool(processes=parallelize_dict['workers']) as pool:
+
+            n_procs = parallelize_dict['workers'] if parallelize_dict['workers'] > 0 else len(parallelize_dict['values'])
+            with mp.Pool(processes=n_procs) as pool:
                 pool.map(func=os.system, iterable=cmds)
 
     def _create_folder_arg_and_makedir(self, param_name_for_exp_root_folder, exp_folder, exp_name):
