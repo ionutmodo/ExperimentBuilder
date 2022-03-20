@@ -23,7 +23,7 @@ class ExperimentBuilder:
             value = ' '.join(map(str, value))
         setattr(self, f'_{name}', value)
 
-    def run(self, exp_folder: str, exp_name: str, param_name_for_exp_root_folder: str, parallelize_dict:dict=None, debug:bool=False):
+    def run(self, exp_folder: str, exp_name: Template, param_name_for_exp_root_folder: str, parallelize_dict:dict=None, debug:bool=False):
         """
         :param exp_folder: absolute path of the root folder where you want your experiments to be
         :param exp_name: template string that will be given as input to Template
