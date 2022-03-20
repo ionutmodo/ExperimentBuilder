@@ -26,7 +26,7 @@ class ExperimentBuilder:
     def run(self, exp_folder: str, exp_name: Template, param_name_for_exp_root_folder: str, parallelize_dict:dict=None, debug:bool=False):
         """
         :param exp_folder: absolute path of the root folder where you want your experiments to be
-        :param exp_name: template string that will be given as input to Template
+        :param exp_name: template used to generate experiment name
             The placeholders name should be the parameter names added using add_param method
         :param param_name_for_exp_root_folder: the cmd argument name for the output directory
         :param parallelize_dict: a dictionary. Example {'workers': int, 'param': str, 'values': list)
