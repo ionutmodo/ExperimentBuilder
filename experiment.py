@@ -45,7 +45,7 @@ class ExperimentBuilder:
             if debug:
                 print(cmd)
             else:
-                self._create_folder_arg_and_makedir(param_name_for_exp_root_folder, exp_folder, exp_name)
+                self._create_folder_arg_then_makedir_then_write_parameters(param_name_for_exp_root_folder, exp_folder, exp_name)
                 os.system(cmd)
 
             print('ended', exp_name)
@@ -54,7 +54,7 @@ class ExperimentBuilder:
             cmds = []
             for v in parallelize_dict['values']:
                 self.add_param(parallelize_dict['param'], v)
-                self._create_folder_arg_and_makedir(param_name_for_exp_root_folder, exp_folder, exp_name)
+                self._create_folder_arg_then_makedir_then_write_parameters(param_name_for_exp_root_folder, exp_folder, exp_name)
                 cmds.append(self._build_command())
             if debug:
                 for cmd in cmds:
@@ -64,10 +64,14 @@ class ExperimentBuilder:
             with mp.Pool(processes=n_procs) as pool:
                 pool.map(func=os.system, iterable=cmds)
 
-    def _create_folder_arg_and_makedir(self, param_name_for_exp_root_folder, exp_folder, exp_name):
+    def _create_folder_arg_then_makedir_then_write_parameters(self, param_name_for_exp_root_folder, exp_folder, exp_name):
         exp_root_folder = os.path.join(exp_folder, self._fill_template(exp_name))
         os.makedirs(exp_root_folder, exist_ok=True)
         self.add_param(param_name_for_exp_root_folder, exp_root_folder)
+
+        with open(os.path.join(exp_root_folder, 'arguments.txt'), 'w') as w:
+            for k, v in self.__dict__.items():
+                w.write(f'{k}={v}')
 
     def _fill_template(self, template):
         return template.substitute(**{
