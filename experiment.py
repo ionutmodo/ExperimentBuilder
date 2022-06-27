@@ -48,7 +48,7 @@ class ExperimentBuilder:
             else:
                 os.system(cmd)
 
-            print('ended', exp_name)
+            print('EXPERIMENT ENDED')
             print(cmd)
         else:
             cmds = []
