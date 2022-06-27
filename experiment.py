@@ -71,7 +71,7 @@ class ExperimentBuilder:
 
         with open(os.path.join(exp_root_folder, 'arguments.txt'), 'w') as w:
             for k, v in self.__dict__.items():
-                w.write(f'{k}={v}')
+                w.write(f'{k}={v}\n')
 
     def _fill_template(self, template):
         return template.substitute(**{
