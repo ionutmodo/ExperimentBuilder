@@ -71,6 +71,8 @@ class ExperimentBuilder:
 
         with open(os.path.join(exp_root_folder, 'arguments.txt'), 'w') as w:
             for k, v in self.__dict__.items():
+                if k.startswith('_'):
+                    k = k[1:]
                 w.write(f'{k}={v}\n')
 
     def _fill_template(self, template):
