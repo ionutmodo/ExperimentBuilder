@@ -42,10 +42,10 @@ class ExperimentBuilder:
 
         if parallelize_dict is None:  # run a single process
             cmd = self._build_command()
+            self._create_folder_arg_then_makedir_then_write_parameters(param_name_for_exp_root_folder, exp_folder, exp_name)
             if debug:
                 print(cmd)
             else:
-                self._create_folder_arg_then_makedir_then_write_parameters(param_name_for_exp_root_folder, exp_folder, exp_name)
                 os.system(cmd)
 
             print('ended', exp_name)
