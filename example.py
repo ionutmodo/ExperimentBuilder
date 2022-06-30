@@ -3,7 +3,8 @@ from string import Template
 
 
 def main():
-    def add(k, v): exp.add_param(k, v)
+    def add(k, v):
+        exp.add_param(k, v)
     
     exp = ExperimentBuilder(
         script=r'absolute-path-to-your-script',
@@ -19,7 +20,7 @@ def main():
     for lr in [1e-4, 1e-3, 1e-2]:
         print(f'lr={lr}')
 
-        exp.add_param('lr', lr)
+        add('lr', lr)
         exp.run(
             debug=True,
             parallelize_dict=dict(workers=5, param='seed', values=[0, 1, 2, 3, 4]),
