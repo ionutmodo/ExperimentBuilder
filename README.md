@@ -38,16 +38,17 @@ The constructor requires the following parameters:
 
 Once the `ExperimentBuilder` object is created, you can add command line arguments on the fly using `add_param` method as key and value pairs. They will be converted automatically to strings and will be added to the project using the `getattr` builtin function, preceded by the underscore prefix (to be able to differentiate them from other attributes in the object).
 
-There is also support for boolean command line arguments. For example, if you use `add_param('normalize', True)`, then it will only add the `--normalize` argument. If you use `add_param('normalize', False)`, there no argument will be added to the command line.
+There is also support for boolean command line arguments. For example, if you use `add_param('normalize', True)`, then it will only add the `--normalize` argument. If you use `add_param('normalize', False)`, then no argument will be added to the command line.
 
-After you added all required arguments, you should call the `run` method, with the following parameters:
+After you added all required arguments (either in constructor using `defaults` or by calling `add_param` method), you should call the `run` method, with the following parameters:
 - `exp_folder`: the root folder where you will store all experiments
-- `exp_name`: the name of your experiment, which will be a folder saved at the path given by the `exp_folder` parameter. This is a template that allows you to use hyperparameter values in the name. For example, if you called `add_param('lr', 0.1)`, then you can use ```exp_name=Template('lr=${lr}')``` and the folder will be named `lr=0.1`.
-- `parallelize_dict`: a dictionary with keys `workers`, `param`, `values`, explained below. It allows you to create multiple runs for the program in which only one parameter is different. For example, it can be used to run a program with the same hyper-parameters (added using `add_param` method), but different seeds, as in the `example.py` file in this repository.
-  - `workers`: specifies the number of workers in the Processing Pool that will run the commands
+- `exp_name`: the name of your experiment, which will be a folder saved at the path given by the `exp_folder` parameter. This is a template that allows you to use hyperparameter values in the name. For example, if you called `add_param('lr', 0.1)`, then you can use ```exp_name=Template('lr=${lr}')``` and the folder will be named `lr=0.1`
+- `parallelize_dict`: a dictionary with keys `workers`, `param`, `values`, explained below. It allows you to create multiple command line arguments for your `main.py` program in which only one parameter is different. For example, it can be used to run a program with the same hyper-parameters, but different seeds, as in the [experiment.py](https://github.com/ionutmodo/ExperimentBuilder/blob/main/example.py) file in this repository.
+  Dictionary keys: 
+  - `workers`: specifies the number of workers in the Processing Pool that will run the different commands in parallel
   - `param`: specifies the parameter that will get multiple values
   - `values`: specifies the values for the parameter
-- `param_name_for_exp_root_folder`: it is expected that your `~/workplace/Application/main.py` script require a parameter that specifies a root folder on the disk where you will save all your experiments to (suppose it's called `root_folder`). In this case, you must set `param_name_for_exp_root_folder='root_folder'` such that, in the `run` method, it will be given the value `exp_folder + exp_name` when you run the script.
-- `debug`: set it to True if you only want to print the commands that the `ExperimentBuilder` builds. Set it to False in order to actually run those commands in a Linux environment.
+- `param_name_for_exp_root_folder`: it is expected that your `~/workplace/Application/main.py` script require a parameter that specifies a root folder on the disk where you will save all your experiments to (suppose it's called `root_folder`). In this case, you must set `param_name_for_exp_root_folder='root_folder'` such that, in the `run` method, it will be given the value `os.path.join(exp_folder, exp_name)` when you run the script
+- `debug`: set it to True if you only want to print the commands that the `ExperimentBuilder` builds. Set it to False in order to actually run those commands in a Linux environment
 
 An example is provided in the file [experiment.py](https://github.com/ionutmodo/ExperimentBuilder/blob/main/example.py) and you can actually see the output for that program at the bottom of the script.
