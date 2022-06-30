@@ -5,7 +5,7 @@ import os
 
 
 class ExperimentBuilder:
-    def __init__(self, script, defaults, CUDA_VISIBLE_DEVICES):
+    def __init__(self, script, defaults, CUDA_VISIBLE_DEVICES, verbose=True):
         """
         @param script: path to script, rooted in home directory (it's automatically inserted as prefix)
         @param defaults: default cmd arguments that usually stay fixed
@@ -14,6 +14,7 @@ class ExperimentBuilder:
         self.CUDA_VISIBLE_DEVICES = CUDA_VISIBLE_DEVICES
         os.environ['CUDA_VISIBLE_DEVICES'] = CUDA_VISIBLE_DEVICES
         self.script = script
+        self.verbose = verbose
 
         for k, v in defaults.items():
             self.add_param(k, v)
@@ -74,10 +75,10 @@ class ExperimentBuilder:
                 if k.startswith('_'):
                     k = k[1:]
                 w.write(f'{k}={v}\n')
-
-        print(f'Added parameter {param_name_for_exp_root_folder}={exp_root_folder}')
-        print(f'Created folder {exp_root_folder} and wrote command arguments to "arguments.txt" file inside it')
-        print()
+        if self.verbose:
+            print(f'Added parameter {param_name_for_exp_root_folder}={exp_root_folder}')
+            print(f'Created folder {exp_root_folder} and wrote command arguments to "arguments.txt" file inside it')
+            print()
 
     def _fill_template(self, template):
         return template.substitute(**{
