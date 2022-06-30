@@ -11,7 +11,7 @@ class ExperimentBuilder:
         @param defaults: default cmd arguments that usually stay fixed
         @param CUDA_VISIBLE_DEVICES: value to initialize CUDA_VISIBLE_DEVICES env variable
         """
-        self.devices = CUDA_VISIBLE_DEVICES
+        self.CUDA_VISIBLE_DEVICES = CUDA_VISIBLE_DEVICES
         os.environ['CUDA_VISIBLE_DEVICES'] = CUDA_VISIBLE_DEVICES
         self.script = script
 
