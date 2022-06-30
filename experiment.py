@@ -76,7 +76,7 @@ class ExperimentBuilder:
                 w.write(f'{k}={v}\n')
 
         print(f'Added parameter {param_name_for_exp_root_folder}={exp_root_folder}')
-        print(f'Created folder {exp_folder} and wrote command arguments to "arguments.txt" file')
+        print(f'Created folder {exp_root_folder} and wrote command arguments to "arguments.txt" file inside it')
         print()
 
     def _fill_template(self, template):
