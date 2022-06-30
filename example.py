@@ -1,8 +1,18 @@
-from experiment import ExperimentBuilder
 from string import Template
+import os
+import sys
+
+
+def link_experiment_library():
+    home = os.path.expanduser('~')
+    exp_lib_path = os.path.join(home, 'workplace', 'ExperimentBuilder')
+    sys.path.append(exp_lib_path)
 
 
 def main():
+    link_experiment_library()
+    from experiment import ExperimentBuilder
+
     def add(k, v):
         exp.add_param(k, v)
     
@@ -15,9 +25,11 @@ def main():
             lr_decay_at=[82, 123],
             batchsize=128,
             epochs=164,
-        ), CUDA_VISIBLE_DEVICES='0')
+        ),
+        CUDA_VISIBLE_DEVICES='0',
+        verbose=True)
 
-    for lr in [1e-4, 1e-3, 1e-2]:
+    for lr in [1e-4, 1e-2]:
         print(f'lr={lr}')
 
         add('lr', lr)
@@ -28,30 +40,57 @@ def main():
             exp_folder=f'abs-exp-path',
             exp_name=Template('lr=${lr}_damp=${damp}_batchsize=${batchsize}_epochs=${epochs}_seed=${seed}')
         )
+        print('--------------------------------------------------')
 
 
 if __name__ == '__main__':
     main()
 
 """
+Below you can find the output of this program:
+
 lr=0.0001
+Added parameter root_folder=abs-exp-path\lr=0.0001_damp=1e-05_batchsize=128_epochs=164_seed=0
+Created folder abs-exp-path\lr=0.0001_damp=1e-05_batchsize=128_epochs=164_seed=0 and wrote command arguments to "arguments.txt" file inside it
+
+Added parameter root_folder=abs-exp-path\lr=0.0001_damp=1e-05_batchsize=128_epochs=164_seed=1
+Created folder abs-exp-path\lr=0.0001_damp=1e-05_batchsize=128_epochs=164_seed=1 and wrote command arguments to "arguments.txt" file inside it
+
+Added parameter root_folder=abs-exp-path\lr=0.0001_damp=1e-05_batchsize=128_epochs=164_seed=2
+Created folder abs-exp-path\lr=0.0001_damp=1e-05_batchsize=128_epochs=164_seed=2 and wrote command arguments to "arguments.txt" file inside it
+
+Added parameter root_folder=abs-exp-path\lr=0.0001_damp=1e-05_batchsize=128_epochs=164_seed=3
+Created folder abs-exp-path\lr=0.0001_damp=1e-05_batchsize=128_epochs=164_seed=3 and wrote command arguments to "arguments.txt" file inside it
+
+Added parameter root_folder=abs-exp-path\lr=0.0001_damp=1e-05_batchsize=128_epochs=164_seed=4
+Created folder abs-exp-path\lr=0.0001_damp=1e-05_batchsize=128_epochs=164_seed=4 and wrote command arguments to "arguments.txt" file inside it
+
 CUDA_VISIBLE_DEVICES=0 python absolute-path-to-your-script --lr 0.0001 --damp 1e-05 --use_cuda --lr_decay_at 82 123 --batchsize 128 --epochs 164 --seed 0 --root_folder abs-exp-path\lr=0.0001_damp=1e-05_batchsize=128_epochs=164_seed=0
 CUDA_VISIBLE_DEVICES=0 python absolute-path-to-your-script --lr 0.0001 --damp 1e-05 --use_cuda --lr_decay_at 82 123 --batchsize 128 --epochs 164 --seed 1 --root_folder abs-exp-path\lr=0.0001_damp=1e-05_batchsize=128_epochs=164_seed=1
 CUDA_VISIBLE_DEVICES=0 python absolute-path-to-your-script --lr 0.0001 --damp 1e-05 --use_cuda --lr_decay_at 82 123 --batchsize 128 --epochs 164 --seed 2 --root_folder abs-exp-path\lr=0.0001_damp=1e-05_batchsize=128_epochs=164_seed=2
 CUDA_VISIBLE_DEVICES=0 python absolute-path-to-your-script --lr 0.0001 --damp 1e-05 --use_cuda --lr_decay_at 82 123 --batchsize 128 --epochs 164 --seed 3 --root_folder abs-exp-path\lr=0.0001_damp=1e-05_batchsize=128_epochs=164_seed=3
 CUDA_VISIBLE_DEVICES=0 python absolute-path-to-your-script --lr 0.0001 --damp 1e-05 --use_cuda --lr_decay_at 82 123 --batchsize 128 --epochs 164 --seed 4 --root_folder abs-exp-path\lr=0.0001_damp=1e-05_batchsize=128_epochs=164_seed=4
-
-lr=0.001
-CUDA_VISIBLE_DEVICES=0 python absolute-path-to-your-script --lr 0.001 --damp 1e-05 --use_cuda --lr_decay_at 82 123 --batchsize 128 --epochs 164 --seed 0 --root_folder abs-exp-path\lr=0.001_damp=1e-05_batchsize=128_epochs=164_seed=0
-CUDA_VISIBLE_DEVICES=0 python absolute-path-to-your-script --lr 0.001 --damp 1e-05 --use_cuda --lr_decay_at 82 123 --batchsize 128 --epochs 164 --seed 1 --root_folder abs-exp-path\lr=0.001_damp=1e-05_batchsize=128_epochs=164_seed=1
-CUDA_VISIBLE_DEVICES=0 python absolute-path-to-your-script --lr 0.001 --damp 1e-05 --use_cuda --lr_decay_at 82 123 --batchsize 128 --epochs 164 --seed 2 --root_folder abs-exp-path\lr=0.001_damp=1e-05_batchsize=128_epochs=164_seed=2
-CUDA_VISIBLE_DEVICES=0 python absolute-path-to-your-script --lr 0.001 --damp 1e-05 --use_cuda --lr_decay_at 82 123 --batchsize 128 --epochs 164 --seed 3 --root_folder abs-exp-path\lr=0.001_damp=1e-05_batchsize=128_epochs=164_seed=3
-CUDA_VISIBLE_DEVICES=0 python absolute-path-to-your-script --lr 0.001 --damp 1e-05 --use_cuda --lr_decay_at 82 123 --batchsize 128 --epochs 164 --seed 4 --root_folder abs-exp-path\lr=0.001_damp=1e-05_batchsize=128_epochs=164_seed=4
-
+--------------------------------------------------
 lr=0.01
+Added parameter root_folder=abs-exp-path\lr=0.01_damp=1e-05_batchsize=128_epochs=164_seed=0
+Created folder abs-exp-path\lr=0.01_damp=1e-05_batchsize=128_epochs=164_seed=0 and wrote command arguments to "arguments.txt" file inside it
+
+Added parameter root_folder=abs-exp-path\lr=0.01_damp=1e-05_batchsize=128_epochs=164_seed=1
+Created folder abs-exp-path\lr=0.01_damp=1e-05_batchsize=128_epochs=164_seed=1 and wrote command arguments to "arguments.txt" file inside it
+
+Added parameter root_folder=abs-exp-path\lr=0.01_damp=1e-05_batchsize=128_epochs=164_seed=2
+Created folder abs-exp-path\lr=0.01_damp=1e-05_batchsize=128_epochs=164_seed=2 and wrote command arguments to "arguments.txt" file inside it
+
+Added parameter root_folder=abs-exp-path\lr=0.01_damp=1e-05_batchsize=128_epochs=164_seed=3
+Created folder abs-exp-path\lr=0.01_damp=1e-05_batchsize=128_epochs=164_seed=3 and wrote command arguments to "arguments.txt" file inside it
+
+Added parameter root_folder=abs-exp-path\lr=0.01_damp=1e-05_batchsize=128_epochs=164_seed=4
+Created folder abs-exp-path\lr=0.01_damp=1e-05_batchsize=128_epochs=164_seed=4 and wrote command arguments to "arguments.txt" file inside it
+
 CUDA_VISIBLE_DEVICES=0 python absolute-path-to-your-script --lr 0.01 --damp 1e-05 --use_cuda --lr_decay_at 82 123 --batchsize 128 --epochs 164 --seed 0 --root_folder abs-exp-path\lr=0.01_damp=1e-05_batchsize=128_epochs=164_seed=0
 CUDA_VISIBLE_DEVICES=0 python absolute-path-to-your-script --lr 0.01 --damp 1e-05 --use_cuda --lr_decay_at 82 123 --batchsize 128 --epochs 164 --seed 1 --root_folder abs-exp-path\lr=0.01_damp=1e-05_batchsize=128_epochs=164_seed=1
 CUDA_VISIBLE_DEVICES=0 python absolute-path-to-your-script --lr 0.01 --damp 1e-05 --use_cuda --lr_decay_at 82 123 --batchsize 128 --epochs 164 --seed 2 --root_folder abs-exp-path\lr=0.01_damp=1e-05_batchsize=128_epochs=164_seed=2
 CUDA_VISIBLE_DEVICES=0 python absolute-path-to-your-script --lr 0.01 --damp 1e-05 --use_cuda --lr_decay_at 82 123 --batchsize 128 --epochs 164 --seed 3 --root_folder abs-exp-path\lr=0.01_damp=1e-05_batchsize=128_epochs=164_seed=3
 CUDA_VISIBLE_DEVICES=0 python absolute-path-to-your-script --lr 0.01 --damp 1e-05 --use_cuda --lr_decay_at 82 123 --batchsize 128 --epochs 164 --seed 4 --root_folder abs-exp-path\lr=0.01_damp=1e-05_batchsize=128_epochs=164_seed=4
+--------------------------------------------------
 """
