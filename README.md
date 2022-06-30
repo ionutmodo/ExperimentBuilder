@@ -51,4 +51,6 @@ After you added all required arguments (either in constructor using `defaults` o
 - `param_name_for_exp_root_folder`: it is expected that your `~/workplace/Application/main.py` script require a parameter that specifies a root folder on the disk where you will save all your experiments to (suppose it's called `root_folder`). In this case, you must set `param_name_for_exp_root_folder='root_folder'` such that, in the `run` method, it will be given the value `os.path.join(exp_folder, exp_name)` when you run the script
 - `debug`: set it to True if you only want to print the commands that the `ExperimentBuilder` builds. Set it to False in order to actually run those commands in a Linux environment
 
+The command line arguments will be saved in the experiment folder in the file `arguments.txt`.
+
 An example is provided in the file [experiment.py](https://github.com/ionutmodo/ExperimentBuilder/blob/main/example.py) and you can actually see the output for that program at the bottom of the script.
