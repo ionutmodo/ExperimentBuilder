@@ -68,13 +68,16 @@ class ExperimentBuilder:
         exp_root_folder = os.path.join(exp_folder, self._fill_template(exp_name))
         os.makedirs(exp_root_folder, exist_ok=True)
         self.add_param(param_name_for_exp_root_folder, exp_root_folder)
-        print(f'added pair {param_name_for_exp_root_folder}={exp_root_folder}')
 
         with open(os.path.join(exp_root_folder, 'arguments.txt'), 'w') as w:
             for k, v in self.__dict__.items():
                 if k.startswith('_'):
                     k = k[1:]
                 w.write(f'{k}={v}\n')
+
+        print(f'Added parameter {param_name_for_exp_root_folder}={exp_root_folder}')
+        print(f'Created folder {exp_folder} and wrote command arguments to "arguments.txt" file')
+        print()
 
     def _fill_template(self, template):
         return template.substitute(**{
