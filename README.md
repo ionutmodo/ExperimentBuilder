@@ -9,10 +9,12 @@ How to use ExperimentBuilder?
 
 Suppose you have both your project and the `ExperimentBuilder` project in the same folder on the disk:
 
-- `~/workplace/Application/main.py`
+- `~/workplace/Application/`
+  - `main.py`
+  - `run_exp.py`
 - `~/workplace/ExperimentBuilder/experiment.py`
 
-In your `main.py` method you should link the `ExperimentBuilder` project to your project `Application`, such that you can use the module `experiment.py`:
+Your `main.py` contains the program that performs your task, and `run_exp.py` should build the command line arguments using `ExperimentBuilder`. In your `run_exp.py` script, you should link the `ExperimentBuilder` project, such that you can use the module `experiment.py`:
 
 ```python
 import os, sys
@@ -23,7 +25,7 @@ def link_experiment_library():
     sys.path.append(exp_lib_path)
 ```
 
-After that, you can build your script to run experiment, similar to the file `example.py` in this repository.
+After that, you can build your script to run experiment, similar to the file [experiment.py](https://github.com/ionutmodo/ExperimentBuilder/blob/main/example.py) in this repository.
 
 Details about `ExperimentBuilder` class in `experiment.py` file:
 ----------------------------------------------------------------
