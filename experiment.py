@@ -8,8 +8,10 @@ import time
 
 def wait_for_process(pid, timeout_seconds=60):
     if pid is not None:
+        attempts = 1
         while psutil.pid_exists(pid):
-            print(f'Process {pid} is still running, waiting {timeout_seconds} seconds...')
+            print(f'Process {pid} is still running, waiting {timeout_seconds} seconds...({attempts})')
+            attempts += 1
             time.sleep(timeout_seconds)
 
 
