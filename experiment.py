@@ -73,8 +73,7 @@ class ExperimentBuilder:
         with open(os.path.join(exp_root_folder, 'arguments.txt'), 'w') as w:
             for k, v in self.__dict__.items():
                 if k.startswith('_'):
-                    k = k[1:]
-                w.write(f'{k}={v}\n')
+                    w.write(f'{k[1:]}={v}\n')
         if self.verbose:
             print(f'Added parameter {param_name_for_exp_root_folder}={exp_root_folder}')
             print(f'Created folder {exp_root_folder} and wrote command arguments to "arguments.txt" file inside it')
