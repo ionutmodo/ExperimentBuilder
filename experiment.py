@@ -2,6 +2,15 @@ import multiprocessing as mp
 from string import Template
 import sys
 import os
+import psutil
+import time
+
+
+def wait_for_process(pid, timeout_seconds=60):
+    if pid is not None:
+        while psutil.pid_exists(pid):
+            print(f'Process {pid} is still running, waiting {timeout_seconds} seconds...')
+            time.sleep(timeout_seconds)
 
 
 class ExperimentBuilder:
@@ -24,7 +33,13 @@ class ExperimentBuilder:
             value = ' '.join(map(str, value))
         setattr(self, f'_{name}', value)
 
-    def run(self, exp_folder: str, exp_name: Template, param_name_for_exp_root_folder: str, parallelize_dict:dict=None, debug:bool=False):
+    def run(self,
+            exp_folder: str,
+            exp_name: Template,
+            param_name_for_exp_root_folder: str,
+            parallelize_dict: dict = None,
+            debug: bool = False,
+            wait_for_pid: int = None):
         """
         :param exp_folder: absolute path of the root folder where you want your experiments to be
         :param exp_name: template used to generate experiment name
@@ -35,7 +50,8 @@ class ExperimentBuilder:
             - param is the parameter to parallelize over
             - values is the list of values for the parameter to be run in parallel using multiprocessing
             This is teste only for CPU device
-        :param debug:
+        :param debug: print commands if True, run commands if False
+        :param wait_for_pid: if a process with the pid exists, wait for it to finish before running; do nothing if set to None
         :return:
         """
         if ('linux' in sys.platform) or ('darwin' in sys.platform):
@@ -47,6 +63,7 @@ class ExperimentBuilder:
             if debug:
                 print(cmd)
             else:
+                wait_for_process(wait_for_pid)
                 os.system(cmd)
 
             print('EXPERIMENT ENDED')
@@ -61,6 +78,7 @@ class ExperimentBuilder:
                 for cmd in cmds:
                     print(cmd)
 
+            wait_for_process(wait_for_pid)
             n_procs = parallelize_dict['workers'] if parallelize_dict['workers'] > 0 else len(parallelize_dict['values'])
             with mp.Pool(processes=n_procs) as pool:
                 pool.map(func=os.system, iterable=cmds)
