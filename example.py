@@ -34,6 +34,7 @@ def main():
 
         add('lr', lr)
         exp.run(
+            wait_for_pids=None,
             debug=True,
             parallelize_dict=dict(workers=5, param='seed', values=[0, 1, 2, 3, 4]),
             param_name_for_exp_root_folder='root_folder',

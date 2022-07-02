@@ -1,16 +1,17 @@
 import multiprocessing as mp
 from string import Template
+from typing import List
 import sys
 import os
 import psutil
 import time
 
 
-def wait_for_process(pid, timeout_seconds=60):
-    if pid is not None:
+def wait_for_processes(pids, timeout_seconds=60):
+    if pids is not None:
         attempts = 1
-        while psutil.pid_exists(pid):
-            print(f'Process {pid} is still running, waiting {timeout_seconds} seconds...({attempts})')
+        while sum([psutil.pid_exists(pid) for pid in pids]) > 0:
+            print(f'(#{attempts}) at least one process from {pids} is still running, waiting {timeout_seconds} seconds...')
             attempts += 1
             time.sleep(timeout_seconds)
 
@@ -41,7 +42,7 @@ class ExperimentBuilder:
             param_name_for_exp_root_folder: str,
             parallelize_dict: dict = None,
             debug: bool = False,
-            wait_for_pid: int = None):
+            wait_for_pids: List[int] = None):
         """
         :param exp_folder: absolute path of the root folder where you want your experiments to be
         :param exp_name: template used to generate experiment name
@@ -53,7 +54,8 @@ class ExperimentBuilder:
             - values is the list of values for the parameter to be run in parallel using multiprocessing
             This is teste only for CPU device
         :param debug: print commands if True, run commands if False
-        :param wait_for_pid: if a process with the pid exists, wait for it to finish before running; do nothing if set to None
+        :param wait_for_pids: a list containing the PIDs of processes that need to finish before running this script;
+        if None, then start the current process(es) right away. This is useful when another process is currently using the GPUs you also want to use
         :return:
         """
         if ('linux' in sys.platform) or ('darwin' in sys.platform):
@@ -65,7 +67,7 @@ class ExperimentBuilder:
             if debug:
                 print(cmd)
             else:
-                wait_for_process(wait_for_pid)
+                wait_for_processes(wait_for_pids)
                 os.system(cmd)
 
             print('EXPERIMENT ENDED')
@@ -80,7 +82,7 @@ class ExperimentBuilder:
                 for cmd in cmds:
                     print(cmd)
 
-            wait_for_process(wait_for_pid)
+            wait_for_processes(wait_for_pids)
             n_procs = parallelize_dict['workers'] if parallelize_dict['workers'] > 0 else len(parallelize_dict['values'])
             with mp.Pool(processes=n_procs) as pool:
                 pool.map(func=os.system, iterable=cmds)
