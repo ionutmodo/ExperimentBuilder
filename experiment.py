@@ -32,8 +32,16 @@ class ExperimentBuilder:
             self.add_param(k, v)
 
     def add_param(self, name, value):
+        """
+        Adds a parameter to the command line args in the form "--name value" (roughly)
+        :param name: The name of the parameter, which will be preceded by two dashes ("--")
+        :param value: The value for the parameter. If it's a Template, it will be filled in with the values of already existing parameters
+        :return:
+        """
         if isinstance(value, list):
             value = ' '.join(map(str, value))
+        elif isinstance(value, Template):
+            value = self._fill_template(value)
         setattr(self, f'_{name}', value)
 
     def run(self,

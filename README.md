@@ -36,7 +36,7 @@ The constructor requires the following parameters:
 - `CUDA_VISIBLE_DEVICES`: similar to the environment variable in Linux
 - `verbose`: boolean indicating whether you want to print information about the folders that are created when calling `run` method
 
-Once the `ExperimentBuilder` object is created, you can add command line arguments on the fly using `add_param` method as key and value pairs. They will be converted automatically to strings and will be added to the project using the `getattr` builtin function, preceded by the underscore prefix (to be able to differentiate them from other attributes in the object).
+Once the `ExperimentBuilder` object is created, you can add command line arguments on the fly using `add_param` method as key and value pairs. They will be converted automatically to strings and will be added to the project using the `getattr` builtin function, preceded by the underscore prefix (to be able to differentiate them from other attributes in the object). There is also support for templates in the `add_param` method. If you add such a parameter, you can use the previously added parameter values to create the value of the templated parameter.
 
 There is also support for boolean command line arguments. For example, if you use `add_param('normalize', True)`, then it will only add the `--normalize` argument. If you use `add_param('normalize', False)`, then no argument will be added to the command line.
 

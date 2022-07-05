@@ -29,6 +29,8 @@ def main():
         CUDA_VISIBLE_DEVICES='0',
         verbose=True)
 
+    exp.add_param('test_template', Template('lr=${lr}_epochs=${epochs}_batchsize=${batchsize}'))
+
     for lr in [1e-4, 1e-2]:
         print(f'lr={lr}')
 
