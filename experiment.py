@@ -114,12 +114,11 @@ class ExperimentBuilder:
 
     def _fill_template(self, template):
         try:
-            # d = {}
-            # for key, val in self.__dict__.items():
-            #     if key.startswith('_'):
-            #         key = key[1:]
-            #         # if key not in template.
-            return template.substitute(**{key[1:]: val for key, val in self.__dict__.items() if key.startswith('_')})
+            return template.substitute(**{
+                key[1:]: val
+                for key, val in self.__dict__.items()
+                if key.startswith('_')
+            })
         except KeyError:
             return template
 
