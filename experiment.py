@@ -113,6 +113,13 @@ class ExperimentBuilder:
             print()
 
     def _fill_template(self, template):
+        """
+        This method fills in the `template` given as parameter with values stored in `self.__dict__`.
+        If the template uses a variable which is not in `self.__dict__` yet, the method returns the template again
+        because that parameter is expected to be set in `parallelize_dict`. This way, this parameter is not lost
+        :param template: the template to be filled
+        :return: a string containing the template with substitutions or the same template
+        """
         try:
             return template.substitute(**{
                 key[1:]: val
