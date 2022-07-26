@@ -42,7 +42,9 @@ class ExperimentBuilder:
             value = ' '.join(map(str, value))
         elif isinstance(value, Template):
             value = self._fill_template(value)
-        setattr(self, f'_{name}', value)
+
+        if value is not None:
+            setattr(self, f'_{name}', value)
 
     def run(self,
             exp_folder: str,
@@ -84,6 +86,7 @@ class ExperimentBuilder:
             cmds = []
             for v in parallelize_dict['values']:
                 self.add_param(parallelize_dict['param'], v)
+
                 self._create_folder_arg_then_makedir_then_write_parameters(param_name_for_exp_root_folder, exp_folder, exp_name)
                 cmds.append(self._build_command())
             if debug:
@@ -110,11 +113,15 @@ class ExperimentBuilder:
             print()
 
     def _fill_template(self, template):
-        return template.substitute(**{
-            key[1:]: val
-            for key, val in self.__dict__.items()
-            if key.startswith('_')
-        })
+        try:
+            # d = {}
+            # for key, val in self.__dict__.items():
+            #     if key.startswith('_'):
+            #         key = key[1:]
+            #         # if key not in template.
+            return template.substitute(**{key[1:]: val for key, val in self.__dict__.items() if key.startswith('_')})
+        except KeyError:
+            return template
 
     def _build_command(self):
         cvd = 'CUDA_VISIBLE_DEVICES'
