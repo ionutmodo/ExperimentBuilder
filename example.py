@@ -31,7 +31,7 @@ def main():
     exp.add_param('TEST', Template('lr=${lr}_epochs=${epochs}_batchsize=${batchsize}_seed=${seed}'))
 
     exp.run(
-        wait_for_pids=None,
+        wait_for_pids=dict(prefix=123, suffixes=[0,1,2,3]),
         debug=True,
         # parallelize_dict=dict(workers=5, param='seed', values=[0, 1, 2, 3, 4]),
         parallelize_dict=dict(workers=5, param='epochs', values=[80, 100, 120]),

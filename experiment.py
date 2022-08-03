@@ -52,7 +52,7 @@ class ExperimentBuilder:
             param_name_for_exp_root_folder: str,
             parallelize_dict: dict = None,
             debug: bool = False,
-            wait_for_pids: List[int] = None):
+            wait_for_pids: dict = None):
         """
         :param exp_folder: absolute path of the root folder where you want your experiments to be
         :param exp_name: template used to generate experiment name
@@ -64,10 +64,20 @@ class ExperimentBuilder:
             - values is the list of values for the parameter to be run in parallel using multiprocessing
             This is teste only for CPU device
         :param debug: print commands if True, run commands if False
-        :param wait_for_pids: a list containing the PIDs of processes that need to finish before running this script;
-        if None, then start the current process(es) right away. This is useful when another process is currently using the GPUs you also want to use
+        :param wait_for_pids: a dictionary containing two keys: prefix and suffixes. For example, if you want to wait for processes 1230, 1231, 123, 1233,
+        you should set wait_for_pids={prefix=123, suffixes=[0,1,2,3]} (all should be ints for simplicity). The result is a list containing the PIDs of
+        processes that need to finish before running this script; if None, then start the current process(es) right away.
+        This is useful when another process is currently using the GPUs you also want to use
         :return:
         """
+
+        # reduce wait_for_pids dictionary to a list:
+        tmp = []
+        p = wait_for_pids['prefix']
+        for s in wait_for_pids['suffixes']:
+            tmp.append(int(f'{p}{s}'))
+        wait_for_pids = tmp
+
         if ('linux' in sys.platform) or ('darwin' in sys.platform):
             os.system('clear')
 
