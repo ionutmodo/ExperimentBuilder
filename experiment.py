@@ -72,11 +72,12 @@ class ExperimentBuilder:
         """
 
         # reduce wait_for_pids dictionary to a list:
-        tmp = []
-        p = wait_for_pids['prefix']
-        for s in wait_for_pids['suffixes']:
-            tmp.append(int(f'{p}{s}'))
-        wait_for_pids = tmp
+        if wait_for_pids is not None:
+            tmp = []
+            p = wait_for_pids['prefix']
+            for s in wait_for_pids['suffixes']:
+                tmp.append(int(f'{p}{s}'))
+            wait_for_pids = tmp
 
         if ('linux' in sys.platform) or ('darwin' in sys.platform):
             os.system('clear')
