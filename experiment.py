@@ -28,8 +28,9 @@ class ExperimentBuilder:
         self.script = script
         self.verbose = verbose
 
-        for k, v in defaults.items():
-            self.add_param(k, v)
+        if defaults is not None:
+            for k, v in defaults.items():
+                self.add_param(k, v)
 
     def add_param(self, name, value):
         """
