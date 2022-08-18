@@ -93,7 +93,7 @@ class ExperimentBuilder:
         This is useful when another process is currently using the GPUs you also want to use
         :return:
         """
-
+        gpus = list(map(int, self.CUDA_VISIBLE_DEVICES.split(',')))
         # reduce wait_for_pids dictionary to a list:
         if wait_for_pids is not None:
             tmp = []
@@ -112,7 +112,7 @@ class ExperimentBuilder:
                 print(cmd)
             else:
                 if wait_for_gpus:  # waiting for GPUs has higher priority
-                    wait_for_gpus_of_user(list(map(int, self.CUDA_VISIBLE_DEVICES.split(','))))
+                    wait_for_gpus_of_user(gpus)
                 else:
                     wait_for_processes(wait_for_pids)
                 os.system(cmd)
@@ -130,7 +130,10 @@ class ExperimentBuilder:
                 for cmd in cmds:
                     print(cmd)
 
-            wait_for_processes(wait_for_pids)
+            if wait_for_gpus:  # waiting for GPUs has higher priority
+                wait_for_gpus_of_user(gpus)
+            else:
+                wait_for_processes(wait_for_pids)
             n_procs = parallelize_dict['workers'] if parallelize_dict['workers'] > 0 else len(parallelize_dict['values'])
             with mp.Pool(processes=n_procs) as pool:
                 pool.map(func=os.system, iterable=cmds)
