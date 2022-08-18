@@ -1,11 +1,10 @@
 import multiprocessing as mp
 from string import Template
-from typing import List
+import gpustat
 import sys
 import os
 import psutil
 import time
-
 
 def wait_for_processes(pids, timeout_seconds=60):
     if pids is not None:
@@ -14,6 +13,28 @@ def wait_for_processes(pids, timeout_seconds=60):
             print(f'(#{attempts}) at least one process from {pids} is still running, waiting {timeout_seconds} seconds...')
             attempts += 1
             time.sleep(timeout_seconds)
+
+
+def wait_for_gpus_of_user(gpus, timeout_seconds=60):
+    """
+    This method waits `timeout_seconds` for all processes of current user to finish on all GPU cards with IDs in `gpus`
+    """
+    attempts = 1
+    user = os.getlogin()
+    while True:
+        gpus_stat = gpustat.new_query().gpus # get the status of GPUs
+        processes_used_by_user = 0
+        for i in gpus: # i is the ID of a GPU in CUDA_VISIBLE_DEVICES
+            for proc in gpus_stat[i].processes: # p is a dict containing keys (username, command, gpu_memory_usage, pid)
+                if proc['username'] == user:
+                    processes_used_by_user += 1
+        if processes_used_by_user == 0: # the script can run
+            return
+
+        # block the script here
+        print(f'(#{attempts}) {user} has processes running on at least one GPU from {gpus}, waiting {timeout_seconds} seconds...')
+        attempts += 1
+        time.sleep(timeout_seconds)
 
 
 class ExperimentBuilder:
@@ -53,7 +74,8 @@ class ExperimentBuilder:
             param_name_for_exp_root_folder: str,
             parallelize_dict: dict = None,
             debug: bool = False,
-            wait_for_pids: dict = None):
+            wait_for_pids: dict = None,
+            wait_for_gpus: bool = True):
         """
         :param exp_folder: absolute path of the root folder where you want your experiments to be
         :param exp_name: template used to generate experiment name
@@ -89,7 +111,10 @@ class ExperimentBuilder:
             if debug:
                 print(cmd)
             else:
-                wait_for_processes(wait_for_pids)
+                if wait_for_gpus:  # waiting for GPUs has higher priority
+                    wait_for_gpus_of_user(list(map(int, self.CUDA_VISIBLE_DEVICES.split(','))))
+                else:
+                    wait_for_processes(wait_for_pids)
                 os.system(cmd)
 
             print('EXPERIMENT ENDED')
