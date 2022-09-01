@@ -1,6 +1,6 @@
 import multiprocessing as mp
 from string import Template
-import gpustat
+# import gpustat
 import sys
 import os
 import psutil
@@ -161,11 +161,12 @@ class ExperimentBuilder:
         :return: a string containing the template with substitutions or the same template
         """
         try:
-            return template.substitute(**{
-                key[1:]: val
-                for key, val in self.__dict__.items()
-                if key.startswith('_')
-            })
+            d = {}
+            for key, val in self.__dict__.items():
+                if key.startswith('_'):
+                    d[key[1:]] = val
+            substituted = template.substitute(**d)
+            return substituted
         except KeyError:
             return template
 
