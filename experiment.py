@@ -1,6 +1,6 @@
 import multiprocessing as mp
 from string import Template
-# import gpustat
+import gpustat
 import sys
 import os
 import psutil
