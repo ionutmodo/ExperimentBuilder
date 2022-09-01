@@ -165,9 +165,11 @@ class ExperimentBuilder:
             for key, val in self.__dict__.items():
                 if key.startswith('_'):
                     d[key[1:]] = val
+
             substituted = template.substitute(**d)
             return substituted
-        except KeyError:
+        except KeyError as e:
+            print(f'[TemplateError] {str(e)}, {e.__cause__}')
             return template
 
     def _build_command(self):
