@@ -103,14 +103,14 @@ class ExperimentBuilder:
             if debug:
                 for cmd in cmds:
                     print(cmd)
-
-            if wait_for_gpus:  # waiting for GPUs has higher priority
-                wait_for_gpus_of_user(gpus)
             else:
-                wait_for_processes(wait_for_pids)
-            n_procs = parallelize_dict['workers'] if parallelize_dict['workers'] > 0 else len(parallelize_dict['values'])
-            with mp.Pool(processes=n_procs) as pool:
-                pool.map(func=os.system, iterable=cmds)
+                if wait_for_gpus:  # waiting for GPUs has higher priority
+                    wait_for_gpus_of_user(gpus)
+                else:
+                    wait_for_processes(wait_for_pids)
+                n_procs = parallelize_dict['workers'] if parallelize_dict['workers'] > 0 else len(parallelize_dict['values'])
+                with mp.Pool(processes=n_procs) as pool:
+                    pool.map(func=os.system, iterable=cmds)
 
     def _create_folder_arg_then_makedir_then_write_parameters(self, param_name_for_exp_root_folder, exp_folder, exp_name):
         exp_root_folder = os.path.join(exp_folder, self._fill_template(exp_name))
