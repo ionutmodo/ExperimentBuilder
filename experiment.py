@@ -6,7 +6,8 @@ import os
 from tools import read_yaml, wait_for_processes, wait_for_gpus_of_user
 
 
-def waiting_worker(cmd, wait_for_gpus, gpus2wait4, pids2wait4):
+def waiting_worker(params):
+    cmd, wait_for_gpus, gpus2wait4, pids2wait4 = params
     if wait_for_gpus:  # waiting for GPUs has higher priority
         wait_for_gpus_of_user(gpus2wait4)
     else:
