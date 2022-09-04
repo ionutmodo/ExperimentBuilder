@@ -76,7 +76,7 @@ class ExperimentBuilder:
         :return:
         """
         gpus2wait4 = list(map(int, self.CUDA_VISIBLE_DEVICES.split(',')))
-        # reduce wait_for_pids dictionary to a list:
+        pids2wait4 = None
         if wait_for_pids is not None:
             pids2wait4 = []
             p = wait_for_pids['prefix']
