@@ -6,6 +6,14 @@ import os
 from tools import read_yaml, wait_for_processes, wait_for_gpus_of_user
 
 
+def waiting_worker(cmd, wait_for_gpus, gpus2wait4, pids2wait4):
+    if wait_for_gpus:  # waiting for GPUs has higher priority
+        wait_for_gpus_of_user(gpus2wait4)
+    else:
+        wait_for_processes(pids2wait4)
+    os.system(cmd)
+
+
 class ExperimentBuilder:
     def __init__(self, script, defaults, CUDA_VISIBLE_DEVICES, verbose=True):
         """
@@ -67,14 +75,13 @@ class ExperimentBuilder:
         This is useful when another process is currently using the GPUs you also want to use
         :return:
         """
-        gpus = list(map(int, self.CUDA_VISIBLE_DEVICES.split(',')))
+        gpus2wait4 = list(map(int, self.CUDA_VISIBLE_DEVICES.split(',')))
         # reduce wait_for_pids dictionary to a list:
         if wait_for_pids is not None:
-            tmp = []
+            pids2wait4 = []
             p = wait_for_pids['prefix']
             for s in wait_for_pids['suffixes']:
-                tmp.append(int(f'{p}{s}'))
-            wait_for_pids = tmp
+                pids2wait4.append(int(f'{p}{s}'))
 
         if ('linux' in sys.platform) or ('darwin' in sys.platform):
             os.system('clear')
@@ -86,9 +93,9 @@ class ExperimentBuilder:
                 print(cmd)
             else:
                 if wait_for_gpus:  # waiting for GPUs has higher priority
-                    wait_for_gpus_of_user(gpus)
+                    wait_for_gpus_of_user(gpus2wait4)
                 else:
-                    wait_for_processes(wait_for_pids)
+                    wait_for_processes(pids2wait4)
                 os.system(cmd)
 
             print('EXPERIMENT ENDED')
@@ -104,13 +111,9 @@ class ExperimentBuilder:
                 for cmd in cmds:
                     print(cmd)
             else:
-                if wait_for_gpus:  # waiting for GPUs has higher priority
-                    wait_for_gpus_of_user(gpus)
-                else:
-                    wait_for_processes(wait_for_pids)
                 n_procs = parallelize_dict['workers'] if parallelize_dict['workers'] > 0 else len(parallelize_dict['values'])
                 with mp.Pool(processes=n_procs) as pool:
-                    pool.map(func=os.system, iterable=cmds)
+                    pool.map(func=waiting_worker, iterable=[(cmd, wait_for_gpus, gpus2wait4, pids2wait4) for cmd in cmds])
 
     def _create_folder_arg_then_makedir_then_write_parameters(self, param_name_for_exp_root_folder, exp_folder, exp_name):
         exp_root_folder = os.path.join(exp_folder, self._fill_template(exp_name))
