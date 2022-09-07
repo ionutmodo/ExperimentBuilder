@@ -134,7 +134,7 @@ class ExperimentBuilder:
                     pool.map(func=waiting_worker, iterable=[(cmd, wait_for_gpus, gpus2wait4, pids2wait4) for cmd in cmds])
 
     def _create_folder_arg_then_makedir_then_write_parameters(self, param_name_for_exp_root_folder, exp_folder, exp_name):
-        exp_root_folder = os.path.join(exp_folder, self._fill_template(exp_name))
+        exp_root_folder = os.path.join(self._fill_template(exp_folder), self._fill_template(exp_name))
         os.makedirs(exp_root_folder, exist_ok=True)
         self.add_param(param_name_for_exp_root_folder, exp_root_folder)
 
