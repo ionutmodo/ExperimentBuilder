@@ -20,10 +20,10 @@ def main():
         script=r'/tmp/main.py',
         defaults=dict(
             lr=0.001,
+            batchsize=128,
+            epochs=100,
             use_cuda=True,
             lr_decay_at=[82, 123],
-            batchsize=128,
-            seed=1111
         ),
         CUDA_VISIBLE_DEVICES='0',
         verbose=True)
@@ -31,27 +31,16 @@ def main():
     exp.add_param('TEST', Template('lr=${lr}_epochs=${epochs}_batchsize=${batchsize}_seed=${seed}'))
 
     exp.run(
-        wait_for_pids=dict(prefix=123, suffixes=[0,1,2,3]),
+        wait_for_gpus=True,
+        wait_for_pids=dict(prefix=123, suffixes=[0,1,2,3]), # ignored, because wait_for_gpus is True
         debug=True,
         # parallelize_dict=dict(workers=5, param='seed', values=[0, 1, 2, 3, 4]),
-        parallelize_dict=dict(workers=5, param='epochs', values=[80, 100, 120]),
+        # parallelize_dict=dict(workers=5, param='epochs', values=[80, 100, 120]),
+        parallelize_dict=dict(workers=5, params_values=dict(seed=[111, 222, 333], optim=['adam', 'sgd'])),
         param_name_for_exp_root_folder='root_folder',
         exp_folder=f'/tmp/experiments',
-        exp_name=Template('lr=${lr}_batchsize=${batchsize}_epochs=${epochs}_seed=${seed}')
+        exp_name=Template('lr=${lr}_batchsize=${batchsize}_epochs=${epochs}_seed=${seed}_${optim}')
     )
-    # for lr in [1e-4, 1e-2]:
-    #     print(f'lr={lr}')
-    #
-    #     add('lr', lr)
-    #     exp.run(
-    #         wait_for_pids=None,
-    #         debug=True,
-    #         parallelize_dict=dict(workers=5, param='seed', values=[0, 1, 2, 3, 4]),
-    #         param_name_for_exp_root_folder='root_folder',
-    #         exp_folder=f'abs-exp-path',
-    #         exp_name=Template('lr=${lr}_damp=${damp}_batchsize=${batchsize}_epochs=${epochs}_seed=${seed}')
-    #     )
-    #     print('--------------------------------------------------')
 
 
 if __name__ == '__main__':

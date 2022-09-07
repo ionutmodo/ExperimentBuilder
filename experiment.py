@@ -1,5 +1,6 @@
 import multiprocessing as mp
 from string import Template
+from itertools import product
 import sys
 import os
 
@@ -64,11 +65,9 @@ class ExperimentBuilder:
         :param exp_name: template used to generate experiment name
             The placeholders name should be the parameter names added using add_param method
         :param param_name_for_exp_root_folder: the cmd argument name for the output directory
-        :param parallelize_dict: a dictionary. Example {'workers': int, 'param': str, 'values': list)
+        :param parallelize_dict: a dictionary. Example {'workers': int, 'param_values': {'p1': L1, 'p2': L2}})
             - workers is the number of workers for the process pool. Set it to zero to launch one process per parameter
-            - param is the parameter to parallelize over
-            - values is the list of values for the parameter to be run in parallel using multiprocessing
-            This is teste only for CPU device
+            - param_values is the dictionary that may contain values for multiple parameters (the cartesian product will be computed)
         :param debug: print commands if True, run commands if False
         :param wait_for_pids: a dictionary containing two keys: prefix and suffixes. For example, if you want to wait for processes 1230, 1231, 123, 1233,
         you should set wait_for_pids={prefix=123, suffixes=[0,1,2,3]} (all should be ints for simplicity). The result is a list containing the PIDs of
@@ -103,17 +102,35 @@ class ExperimentBuilder:
             print(cmd)
         else:
             cmds = []
-            for v in parallelize_dict['values']:
-                self.add_param(parallelize_dict['param'], v)
+            n_workers = parallelize_dict['workers']
+            params_values_dict = parallelize_dict['params_values']
+            params = list(params_values_dict.keys())
+            n_params = len(params) # how many parameters we have: seed, optim, etc
 
+            # cartesian product of all lists of values for each parameter
+            # from documentation: product(L1, L2)
+
+            # v = params_values_dict.values()
+            # v_list = list(v)
+            # cart_prod = product(*v_list)
+            # cart_prod_list = list(cart_prod)
+            # for values in cart_prod_list:
+
+            for values in product(*list(params_values_dict.values())):
+                for i in range(n_params):
+                    self.add_param(params[i], values[i])
                 self._create_folder_arg_then_makedir_then_write_parameters(param_name_for_exp_root_folder, exp_folder, exp_name)
                 cmds.append(self._build_command())
+            # for v in parallelize_dict['values']:
+            #     self.add_param(parallelize_dict['param'], v)
+            #     self._create_folder_arg_then_makedir_then_write_parameters(param_name_for_exp_root_folder, exp_folder, exp_name)
+            #     cmds.append(self._build_command())
             if debug:
                 for cmd in cmds:
                     print(cmd)
             else:
-                n_procs = parallelize_dict['workers'] if parallelize_dict['workers'] > 0 else len(parallelize_dict['values'])
-                with mp.Pool(processes=n_procs) as pool:
+
+                with mp.Pool(processes=n_workers) as pool:
                     pool.map(func=waiting_worker, iterable=[(cmd, wait_for_gpus, gpus2wait4, pids2wait4) for cmd in cmds])
 
     def _create_folder_arg_then_makedir_then_write_parameters(self, param_name_for_exp_root_folder, exp_folder, exp_name):
