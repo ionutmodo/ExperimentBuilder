@@ -1,8 +1,16 @@
 import os
 import time
-import gpustat
 import psutil
 import yaml
+import platform
+
+
+def on_windows():
+    return platform.system().lower() == 'windows'
+
+
+if not on_windows():
+    import gpustat
 
 
 def read_yaml(file):
