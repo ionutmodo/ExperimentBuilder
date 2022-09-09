@@ -152,7 +152,7 @@ class ExperimentBuilder:
                     pool.map(
                         func=waiting_worker,
                         iterable=[
-                            (cmd, root, cmd_dict, gpu, gwp['max_jobs_per_gpu'], random.randint(3, 5), gwp)
+                            (cmd, root, cmd_dict, gpu, gwp['max_jobs_per_gpu'], random.randint(1, n_workers), gwp)
                             for cmd, root, cmd_dict, gpu in zip(cmds, root_folders, cmds_dict, assigned_gpus)
                         ])
 
