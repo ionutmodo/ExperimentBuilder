@@ -7,9 +7,10 @@ from tools import *
 
 
 def waiting_worker(params):
-    cmd, root, cmd_dict, gpu, max_jobs, delay = params
+    cmd, root, cmd_dict, gpu, max_jobs, delay, gwp = params
 
-    wait_for_gpus_of_user([gpu], max_jobs)
+    # wait_for_gpus_of_user([gpu], max_jobs)
+    gpu = get_free_gpu(gwp['gpus'], gwp['max_jobs_per_gpu'])
     os.makedirs(root, exist_ok=True)
 
     with open(os.path.join(root, 'arguments.txt'), 'w') as w:
@@ -150,7 +151,7 @@ class ExperimentBuilder:
                     pool.map(
                         func=waiting_worker,
                         iterable=[
-                            (cmd, root, cmd_dict, gpu, gwp['max_jobs_per_gpu'], random.randint(1, n_workers))
+                            (cmd, root, cmd_dict, gpu, gwp['max_jobs_per_gpu'], random.randint(1, n_workers), gwp)
                             for cmd, root, cmd_dict, gpu in zip(cmds, root_folders, cmds_dict, assigned_gpus)
                         ])
 

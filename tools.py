@@ -61,17 +61,30 @@ def get_free_gpu(gpus, max_jobs, attempts=0):
     """
     user = os.getlogin()
     can_run_on_gpu = [False] * len(gpus) # flags telling whether we can run the script on a gpu in `gpus`
+    gpu_proc_count = [0] * len(gpus)
 
     gpu_stat = gpustat.new_query().gpus
     for i, gpu_id in enumerate(gpus):
         user_processes = [p for p in gpu_stat[gpu_id].processes if p['username'] == user]
-        can_run_on_gpu[i] = (len(user_processes) < max_jobs)
+        gpu_proc_count[i] = len(user_processes)
+        # can_run_on_gpu[i] = (len(user_processes) < max_jobs)
 
-    # if one flag is True, then pick the gpu from that index and run on it
-    available_gpus = [i for i, flag in enumerate(can_run_on_gpu) if flag]
-    if len(available_gpus) > 0:
-        gpu = random.choice(available_gpus)
-        return gpu
+    least_busy_gpu = None
+    for i, count in enumerate(gpu_proc_count):
+        if count < max_jobs:
+            if least_busy_gpu is None:
+                least_busy_gpu = count
+            else:
+                least_busy_gpu = min(count, least_busy_gpu)
+
+    if least_busy_gpu is not None:
+        return least_busy_gpu
+
+    # # if one flag is True, then pick the gpu from that index and run on it
+    # available_gpus = [i for i, flag in enumerate(can_run_on_gpu) if flag]
+    # if len(available_gpus) > 0:
+    #     gpu = random.choice(available_gpus)
+    #     return gpu
 
     # wait 60 seconds then try again
     print(f'All GPUs in {gpus} have {max_jobs} jobs, waiting 60 seconds...')
