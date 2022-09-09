@@ -24,7 +24,9 @@ def waiting_worker(params):
             if k.startswith('_'):
                 w.write(f'{k[1:]}={v}\n')
 
-    os.system(f'CUDA_VISIBLE_DEVICES={gpu} {cmd}')
+    cmd = f'CUDA_VISIBLE_DEVICES={gpu} {cmd}'
+    print(cmd)
+    os.system(cmd)
 
 
 class ExperimentBuilder:
