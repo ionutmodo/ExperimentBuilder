@@ -33,7 +33,7 @@ Details about `ExperimentBuilder` class in `experiment.py` file:
 The constructor requires the following parameters:
 - `script`: the absolute path to the program that will be run, e.g. `~/workplace/Application/main.py`
 - `defaults`: a dictionary containing default parameters for your program, which will not change if you perform, for example, hyper-parameter tuning, such as `epochs`
-- `CUDA_VISIBLE_DEVICES`: similar to the environment variable in Linux
+<!-- - `CUDA_VISIBLE_DEVICES`: similar to the environment variable in Linux -->
 - `verbose`: boolean indicating whether you want to print information about the folders that are created when calling `run` method
 
 Once the `ExperimentBuilder` object is created, you can add command line arguments on the fly using `add_param` method as key and value pairs. They will be converted automatically to strings and will be added to the project using the `getattr` builtin function, preceded by the underscore prefix (to be able to differentiate them from other attributes in the object). There is also support for templates in the `add_param` method. If you add such a parameter, you can use the previously added parameter values to create the value of the templated parameter.
@@ -48,9 +48,10 @@ After you added all required arguments (either in constructor using `defaults` o
   - `workers`: specifies the number of workers in the Processing Pool that will run the different commands in parallel
   - `param_values` is the dictionary that may contain values for multiple parameters (the cartesian product will be computed)
 - `param_name_for_exp_root_folder`: it is expected that your `~/workplace/Application/main.py` script require a parameter that specifies a root folder on the disk where you will save all your experiments to (suppose it's called `root_folder`). In this case, you must set `param_name_for_exp_root_folder='root_folder'` such that, in the `run` method, it will be given the value `os.path.join(exp_folder, exp_name)` when you run the script
+- `gpu_waiting_policy`: a dictionary containing keys `gpus` and `max_jobs_per_gpu` used to startat most `max_jobs_per_gpu` jobs on all GPUs from `gpus` in parallel
 - `debug`: set it to True if you only want to print the commands that the `ExperimentBuilder` builds. Set it to False in order to actually run those commands in a Linux environment
-- `wait_for_pid`: a dictionary containing two keys: prefix and suffixes. For example, if you want to wait for processes 1230, 1231, 123, 1233, you should set wait_for_pids={prefix=123, suffixes=[0,1,2,3]} (all should be ints for simplicity). The result is a list containing the PIDs of processes that need to finish before running this script; if None, then start the current process(es) right away. This is useful when another process is currently using the GPUs you also want to use
-- `wait_for_gpus`: a boolean specifying whether the ExperimentBuilder should wait `timeout_seconds` for all processes of current user to finish on all GPU cards with IDs in `gpus`. For example, if CUDA_VISIBLE_DEVICES=4,5 and you already have processes on these two GPUs, then the ExperimentBuilder will wait for these processes to finish before running the current experiment
+<!-- - `wait_for_pid`: a dictionary containing two keys: prefix and suffixes. For example, if you want to wait for processes 1230, 1231, 123, 1233, you should set wait_for_pids={prefix=123, suffixes=[0,1,2,3]} (all should be ints for simplicity). The result is a list containing the PIDs of processes that need to finish before running this script; if None, then start the current process(es) right away. This is useful when another process is currently using the GPUs you also want to use-->
+<!-- - `wait_for_gpus`: a boolean specifying whether the ExperimentBuilder should wait `timeout_seconds` for all processes of current user to finish on all GPU cards with IDs in `gpus`. For example, if CUDA_VISIBLE_DEVICES=4,5 and you already have processes on these two GPUs, then the ExperimentBuilder will wait for these processes to finish before running the current experiment -->
 
 The command line arguments will be saved in the experiment folder in the file `arguments.txt`.
 

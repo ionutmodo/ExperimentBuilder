@@ -2,37 +2,39 @@ import multiprocessing as mp
 from string import Template
 from itertools import product
 from copy import deepcopy
-import sys
-import os
 
 from tools import *
 
 
 def waiting_worker(params):
-    cmd, root, cmd_dict, wait_for_gpus, gpus2wait4, pids2wait4 = params
-    if not on_windows():
-        if wait_for_gpus:  # waiting for GPUs has higher priority
-            wait_for_gpus_of_user(gpus2wait4)
-        else:
-            wait_for_processes(pids2wait4)
+    cmd, root, cmd_dict, gwp = params
 
+    if on_windows():
+        gpu =
+        print('[windows]: choosing first GPU from the list and wait ')
+        # wait_for_gpus_of_user(gwp['gpus'][:1])
+    else:
+        gpu = get_first_free_gpu(gpus=gwp['gpus'], max_jobs=gwp['max_jobs_per_gpu'])
+        print(f'[linux]: choosing gpu {gpu}')
+
+    gpu = get_first_free_gpu(gpus=gwp['gpus'], max_jobs=gwp['max_jobs_per_gpu'])
     os.makedirs(root, exist_ok=True)
+
     with open(os.path.join(root, 'arguments.txt'), 'w') as w:
         for k, v in cmd_dict.items():
             if k.startswith('_'):
                 w.write(f'{k[1:]}={v}\n')
-    os.system(cmd)
+
+    os.system(f'CUDA_VISIBLE_DEVICES={gpu} {cmd}')
 
 
 class ExperimentBuilder:
-    def __init__(self, script, defaults, CUDA_VISIBLE_DEVICES, verbose=True):
+    def __init__(self, script, defaults, verbose=True):
         """
-        @param script: path to script, rooted in home directory (it's automatically inserted as prefix)
-        @param defaults: default cmd arguments that usually stay fixed
-        @param CUDA_VISIBLE_DEVICES: value to initialize CUDA_VISIBLE_DEVICES env variable
+        :param script: path to script, rooted in home directory (it's automatically inserted as prefix)
+        :param defaults: default cmd arguments that usually stay fixed
+        :param CUDA_VISIBLE_DEVICES: value to initialize CUDA_VISIBLE_DEVICES env variable
         """
-        self.CUDA_VISIBLE_DEVICES = CUDA_VISIBLE_DEVICES
-        os.environ['CUDA_VISIBLE_DEVICES'] = CUDA_VISIBLE_DEVICES
         self.script = script
         self.verbose = verbose
         self.exp_name_template = None
@@ -70,10 +72,9 @@ class ExperimentBuilder:
             exp_folder: Template,
             exp_name: Template,
             param_name_for_exp_root_folder: str,
+            gpu_waiting_policy: dict,
             parallelize_dict: dict = None,
-            debug: bool = False,
-            wait_for_pids: dict = None,
-            wait_for_gpus: bool = True):
+            debug: bool = False):
         """
         :param exp_folder: absolute path of the root folder where you want your experiments to be
         :param exp_name: template used to generate experiment name
@@ -83,23 +84,20 @@ class ExperimentBuilder:
             - workers is the number of workers for the process pool. Set it to zero to launch one process per parameter
             - param_values is the dictionary that may contain values for multiple parameters (the cartesian product will be computed)
         :param debug: print commands if True, run commands if False
-        :param wait_for_pids: a dictionary containing two keys: prefix and suffixes. For example, if you want to wait for processes 1230, 1231, 123, 1233,
-        you should set wait_for_pids={prefix=123, suffixes=[0,1,2,3]} (all should be ints for simplicity). The result is a list containing the PIDs of
-        processes that need to finish before running this script; if None, then start the current process(es) right away.
-        This is useful when another process is currently using the GPUs you also want to use
-        :param wait_for_gpus: set to True if you want the script to wait for the currently running programs on the selected GPU
+        # :param wait_for_pids: a dictionary containing two keys: prefix and suffixes. For example, if you want to wait for processes 1230, 1231, 123, 1233,
+        # you should set wait_for_pids={prefix=123, suffixes=[0,1,2,3]} (all should be ints for simplicity). The result is a list containing the PIDs of
+        # processes that need to finish before running this script; if None, then start the current process(es) right away.
+        # This is useful when another process is currently using the GPUs you also want to use
+        # :param wait_for_gpus: set to True if you want the script to wait for the currently running programs on the selected GPU
+        :param gpu_waiting_policy: a dictionary containing keys `gpus` and `max_jobs_per_gpu`
         :return:
         """
+        gwp = gpu_waiting_policy
+        assert 'gpus' in gwp.keys(), 'gpu_waiting_policy requires `gpu` key'
+        assert 'max_jobs_per_gpu' in gwp.keys(), 'gpu_waiting_policy requires `max_jobs_per_gpu` key'
+
         self.exp_name_template = deepcopy(exp_name)
         self.exp_folder_template = deepcopy(exp_folder)
-
-        gpus2wait4 = list(map(int, self.CUDA_VISIBLE_DEVICES.split(',')))
-        pids2wait4 = None
-        if wait_for_pids is not None:
-            pids2wait4 = []
-            p = wait_for_pids['prefix']
-            for s in wait_for_pids['suffixes']:
-                pids2wait4.append(int(f'{p}{s}'))
 
         if not on_windows():
             os.system('clear')
@@ -110,13 +108,13 @@ class ExperimentBuilder:
             if debug:
                 print(cmd)
             else:
-                if not on_windows():
-                    if wait_for_gpus:  # waiting for GPUs has higher priority
-                        wait_for_gpus_of_user(gpus2wait4)
-                    else:
-                        wait_for_processes(pids2wait4)
-                os.system(cmd)
-
+                if on_windows():
+                    gpu = gwp['gpus'][0]
+                    print('[windows]: choosing first GPU from the list')
+                else:
+                    gpu = get_first_free_gpu(gpus=gwp['gpus'], max_jobs=gwp['max_jobs_per_gpu'])
+                    print(f'[linux]: chose gpu {gpu}')
+                os.system(f'CUDA_VISIBLE_DEVICES={gpu} {cmd}')
             print('EXPERIMENT ENDED')
             print(cmd)
         else:
@@ -131,10 +129,7 @@ class ExperimentBuilder:
             for values in cart_prod:
                 for k, v in zip(params, values):
                     self.add_param(k, v)
-                # for i in range(n_params):
-                #     self.add_param(params[i], values[i])
                 # after filling in the values for HPO, go through all templated fields and fill them with the new values
-
                 for k, v in self.__dict__.items():
                     if k.startswith('template_'):
                         tmpl_filled = self._fill_template(v)
@@ -157,7 +152,7 @@ class ExperimentBuilder:
                     pool.map(
                         func=waiting_worker,
                         iterable=[
-                            (cmd, root, cmd_dict, wait_for_gpus, gpus2wait4, pids2wait4)
+                            (cmd, root, cmd_dict, gwp)
                             for cmd, root, cmd_dict in zip(cmds, root_folders, cmds_dict)
                         ])
 
@@ -187,7 +182,6 @@ class ExperimentBuilder:
             return template
 
     def _build_command(self):
-        cvd = 'CUDA_VISIBLE_DEVICES'
         params = []
         for k, v in self.__dict__.items():
             if k.startswith('_'):
@@ -200,7 +194,7 @@ class ExperimentBuilder:
                 else:
                     params.append(f'--{k} {str(v)}')
         params = ' '.join(params).replace('--_', '--')
-        return f'{cvd}={os.environ[cvd]} python {self.script} {params}'
+        return f'python {self.script} {params}'
 
     def __getattr__(self, item):
         return self.__dict__[f'_{item}']

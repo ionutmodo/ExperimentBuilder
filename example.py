@@ -24,15 +24,13 @@ def main():
             epochs=100,
             lr_decay_at=[82, 123],
         ),
-        CUDA_VISIBLE_DEVICES='0',
         verbose=True)
 
     exp.add_param('TEST', Template('lr=${lr}_epochs=${epochs}_batchsize=${batchsize}_seed=${seed}'))
 
     exp.run(
-        wait_for_gpus=True,
-        wait_for_pids=dict(prefix=123, suffixes=[0,1,2,3]), # ignored, because wait_for_gpus is True
         debug=False,
+        gpu_waiting_policy=dict(gpus=[4, 5, 6, 7], max_jobs_per_gpu=4),
         # parallelize_dict=dict(workers=5, param='seed', values=[0, 1, 2, 3, 4]),
         # parallelize_dict=dict(workers=5, param='epochs', values=[80, 100, 120]),
         parallelize_dict=dict(workers=5, params_values=dict(seed=[111, 222, 333], optim=['adam', 'sgd'])),
