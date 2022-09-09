@@ -8,7 +8,7 @@ from tools import *
 def waiting_worker(params):
     cmd, root, cmd_dict, gpu_processes_count, gwp = params
     max_jobs = gwp['max_jobs_per_gpu']
-    n_gpus = gwp['gpus']
+    n_gpus = len(gwp['gpus'])
     time.sleep(random.randint(1, n_gpus * max_jobs))
     while True:
         gpu, count = sorted(gpu_processes_count.items(), key=lambda item: item[1])[0] # sort ASC by processes count
