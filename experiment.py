@@ -2,16 +2,21 @@ import multiprocessing as mp
 from string import Template
 from itertools import product
 from copy import deepcopy
-
 from tools import *
 
 
 def waiting_worker(params):
-    cmd, root, cmd_dict, delay, gwp = params
+    cmd, root, cmd_dict, gpu_processes_count, gwp = params
 
-    # wait_for_gpus_of_user([gpu], max_jobs)
-    time.sleep(delay)
-    gpu = get_free_gpu(gwp['gpus'], gwp['max_jobs_per_gpu'])
+    max_jobs = gwp['max_jobs_per_gpu']
+    while True:
+        gpu, count = sorted(gpu_processes_count.items(), key=lambda item: item[1])[0] # sort ASC by processes count
+        if count < max_jobs:
+            break
+
+        print(f'All GPUs in have {max_jobs} jobs, waiting 60 seconds...')
+        time.sleep(60)
+
     os.makedirs(root, exist_ok=True)
 
     with open(os.path.join(root, 'arguments.txt'), 'w') as w:
@@ -21,7 +26,9 @@ def waiting_worker(params):
 
     cmd = f'CUDA_VISIBLE_DEVICES={gpu} {cmd}'
     print(cmd)
+    gpu_processes_count[gpu] += 1
     os.system(cmd)
+    gpu_processes_count[gpu] -= 1
 
 
 class ExperimentBuilder:
@@ -148,11 +155,16 @@ class ExperimentBuilder:
                 for cmd in cmds:
                     print(cmd)
             else:
+                manager = mp.Manager()
+                gpu_processes_count = manager.dict()
+                for gpu in gwp['gpus']:
+                    gpu_processes_count[gpu] = 0
+
                 with mp.Pool(processes=n_workers) as pool:
                     pool.map(
                         func=waiting_worker,
                         iterable=[
-                            (cmd, root, cmd_dict, random.randint(1, n_workers), gwp)
+                            (cmd, root, cmd_dict, gpu_processes_count, gwp)
                             for cmd, root, cmd_dict, gpu in zip(cmds, root_folders, cmds_dict, assigned_gpus)
                         ])
 
