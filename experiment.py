@@ -12,6 +12,7 @@ def waiting_worker(params):
     while True:
         gpu, count = sorted(gpu_processes_count.items(), key=lambda item: item[1])[0] # sort ASC by processes count
         if count < max_jobs:
+            gpu_processes_count[gpu] += 1
             break
 
         print(f'All GPUs in have {max_jobs} jobs, waiting 60 seconds...')
@@ -26,7 +27,6 @@ def waiting_worker(params):
 
     cmd = f'CUDA_VISIBLE_DEVICES={gpu} {cmd}'
     print(cmd)
-    gpu_processes_count[gpu] += 1
     os.system(cmd)
     gpu_processes_count[gpu] -= 1
 
