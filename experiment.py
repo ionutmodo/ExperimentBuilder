@@ -6,9 +6,8 @@ from tools import *
 
 
 def waiting_worker(params):
-    cmd, root, cmd_dict, gpu_processes_count, gwp = params
-    max_jobs = gwp['max_jobs_per_gpu']
-    n_gpus = len(gwp['gpus'])
+    cmd, root, cmd_dict, gpu_processes_count, max_jobs, gpus = params
+    n_gpus = len(gpus)
     time.sleep(random.randint(1, n_gpus * max_jobs))
     while True:
         gpu, count = sorted(gpu_processes_count.items(), key=lambda item: item[1])[0] # sort ASC by processes count
@@ -76,30 +75,30 @@ class ExperimentBuilder:
             exp_folder: Template,
             exp_name: Template,
             param_name_for_exp_root_folder: str,
-            gpu_waiting_policy: dict,
-            parallelize_dict: dict = None,
+            scheduling: dict,
             debug: bool = False):
         """
         :param exp_folder: absolute path of the root folder where you want your experiments to be
         :param exp_name: template used to generate experiment name
             The placeholders name should be the parameter names added using add_param method
         :param param_name_for_exp_root_folder: the cmd argument name for the output directory
-        :param parallelize_dict: a dictionary. Example {'workers': int, 'param_values': {'p1': L1, 'p2': L2}})
-            - workers is the number of workers for the process pool. Set it to zero to launch one process per parameter
-            - param_values is the dictionary that may contain values for multiple parameters (the cartesian product will be computed)
+        :param scheduling: a dictionary containing keys `gpus`, `max_jobs_per_gpu`, `params_values`
+            - `gpus` is a list containing IDs of GPUs you want to run the tasks on
+            - `max_jobs_per_gpu` specifies how many processes should run on each GPU at most (num_workers = len(gpus) * max_jobs_per_gpu)
+            - `param_values` is the dictionary that contains values for multiple parameters (the cartesian product will be computed)
         :param debug: print commands if True, run commands if False
-        # :param wait_for_pids: a dictionary containing two keys: prefix and suffixes. For example, if you want to wait for processes 1230, 1231, 123, 1233,
-        # you should set wait_for_pids={prefix=123, suffixes=[0,1,2,3]} (all should be ints for simplicity). The result is a list containing the PIDs of
-        # processes that need to finish before running this script; if None, then start the current process(es) right away.
-        # This is useful when another process is currently using the GPUs you also want to use
-        # :param wait_for_gpus: set to True if you want the script to wait for the currently running programs on the selected GPU
-        :param gpu_waiting_policy: a dictionary containing keys `gpus` and `max_jobs_per_gpu`
-        :return:
         """
-        gwp = gpu_waiting_policy
-        assert 'gpus' in gwp.keys(), 'gpu_waiting_policy requires `gpu` key'
-        assert 'max_jobs_per_gpu' in gwp.keys(), 'gpu_waiting_policy requires `max_jobs_per_gpu` key'
-        n_gpus = len(gwp['gpus'])
+        assert 'gpus' in scheduling.keys(), 'scheduling requires `gpu` key'
+        assert 'max_jobs_per_gpu' in scheduling.keys(), 'scheduling requires `max_jobs_per_gpu` key'
+        assert 'params_values' in scheduling.keys(), 'scheduling requires `params_values` key'
+
+        """
+        scheduling['gpus']
+        scheduling['max_jobs_per_gpu']
+        scheduling['params_values']
+        """
+        n_gpus = len(scheduling['gpus'])
+        n_workers = n_gpus * scheduling['max_jobs_per_gpu']
 
         self.exp_name_template = deepcopy(exp_name)
         self.exp_folder_template = deepcopy(exp_folder)
@@ -107,67 +106,47 @@ class ExperimentBuilder:
         if not on_windows():
             os.system('clear')
 
-        if parallelize_dict is None:  # run a single process
-            self._create_root_arg(param_name_for_exp_root_folder, exp_folder, exp_name)
-            cmd = self._build_command()
-            if debug:
+        cmds = []
+        root_folders = []
+        cmds_dict = []
+
+        params = list(scheduling['params_values'].keys())
+
+        cart_prod = list(product(*list(scheduling['params_values'].values())))
+        for i, values in enumerate(cart_prod):
+            for k, v in zip(params, values):
+                self.add_param(k, v)
+            # after filling in the values for HPO, go through all templated fields and fill them with the new values
+            for k, v in self.__dict__.items():
+                if k.startswith('template_'):
+                    tmpl_filled = self._fill_template(v)
+                    self.__dict__[k.replace('template', '')] = tmpl_filled # only replace "template", keep "_"
+
+            root_folder = self._create_root_arg(
+                param_name_for_exp_root_folder,
+                self.exp_folder_template,
+                self.exp_name_template)
+
+            p = {k: v for k, v in self.__dict__.items() if k.startswith('_')}
+            cmds_dict.append(p)
+            root_folders.append(root_folder)
+            cmds.append(self._build_command())
+        if debug:
+            for cmd in cmds:
                 print(cmd)
-            else:
-                if on_windows():
-                    gpu = gwp['gpus'][0]
-                    print('[windows]: choosing first GPU from the list')
-                else:
-                    gpu = get_free_gpu(gpus=gwp['gpus'], max_jobs=gwp['max_jobs_per_gpu'])
-                    print(f'[linux]: chose gpu {gpu}')
-                os.system(f'CUDA_VISIBLE_DEVICES={gpu} {cmd}')
-            print('EXPERIMENT ENDED')
-            print(cmd)
         else:
-            cmds = []
-            root_folders = []
-            cmds_dict = []
-            assigned_gpus = []
+            manager = mp.Manager()
+            gpu_processes_count = manager.dict()
+            for gpu in scheduling['gpus']:
+                gpu_processes_count[gpu] = 0
 
-            n_workers = parallelize_dict['workers']
-            params_values_dict = parallelize_dict['params_values']
-            params = list(params_values_dict.keys())
-
-            cart_prod = list(product(*list(params_values_dict.values())))
-            for i, values in enumerate(cart_prod):
-                for k, v in zip(params, values):
-                    self.add_param(k, v)
-                # after filling in the values for HPO, go through all templated fields and fill them with the new values
-                for k, v in self.__dict__.items():
-                    if k.startswith('template_'):
-                        tmpl_filled = self._fill_template(v)
-                        self.__dict__[k.replace('template', '')] = tmpl_filled # only replace "template", keep "_"
-
-                root_folder = self._create_root_arg(
-                    param_name_for_exp_root_folder,
-                    self.exp_folder_template,
-                    self.exp_name_template)
-
-                p = {k: v for k, v in self.__dict__.items() if k.startswith('_')}
-                cmds_dict.append(p)
-                root_folders.append(root_folder)
-                cmds.append(self._build_command())
-                assigned_gpus.append(gwp['gpus'][i % n_gpus])
-            if debug:
-                for cmd in cmds:
-                    print(cmd)
-            else:
-                manager = mp.Manager()
-                gpu_processes_count = manager.dict()
-                for gpu in gwp['gpus']:
-                    gpu_processes_count[gpu] = 0
-
-                with mp.Pool(processes=n_workers) as pool:
-                    pool.map(
-                        func=waiting_worker,
-                        iterable=[
-                            (cmd, root, cmd_dict, gpu_processes_count, gwp)
-                            for cmd, root, cmd_dict, gpu in zip(cmds, root_folders, cmds_dict, assigned_gpus)
-                        ])
+            with mp.Pool(processes=n_workers) as pool:
+                pool.map(
+                    func=waiting_worker,
+                    iterable=[
+                        (cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'])
+                        for cmd, root, cmd_dict, in zip(cmds, root_folders, cmds_dict)
+                    ])
 
     def _create_root_arg(self, param_name_for_exp_root_folder, exp_folder, exp_name):
         exp_root_folder = os.path.join(self._fill_template(exp_folder), self._fill_template(exp_name))

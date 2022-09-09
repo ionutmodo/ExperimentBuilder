@@ -41,17 +41,15 @@ Once the `ExperimentBuilder` object is created, you can add command line argumen
 There is also support for boolean command line arguments. For example, if you use `add_param('normalize', True)`, then it will only add the `--normalize` argument. If you use `add_param('normalize', False)`, then no argument will be added to the command line.
 
 After you added all required arguments (either in constructor using `defaults` or by calling `add_param` method), you should call the `run` method, with the following parameters:
+- `scheduling`: a dictionary containing the following keys:
+  - `gpus` is a list containing IDs of GPUs you want to run the tasks on
+  - `max_jobs_per_gpu` specifies how many processes should run on each GPU at most (num_workers = len(gpus) * max_jobs_per_gpu)
+  - `param_values` is the dictionary that contains values for multiple parameters (the cartesian product will be computed)
+  - see [experiment.py](https://github.com/ionutmodo/ExperimentBuilder/blob/main/example.py) for more details
 - `exp_folder`: the root folder where you will store all experiments
 - `exp_name`: the name of your experiment, which will be a folder saved at the path given by the `exp_folder` parameter. This is a template that allows you to use hyperparameter values in the name. For example, if you called `add_param('lr', 0.1)`, then you can use ```exp_name=Template('lr=${lr}')``` and the folder will be named `lr=0.1`
-- `parallelize_dict`: a dictionary with keys `workers` and `param_values`, explained below. It allows you to create multiple command line arguments for your `main.py` program in which you provide multiple values for multiple parameters. The cartesian product is computed to generate all combinations. For example, it can be used to run a program with the same hyper-parameters, but different seeds and optimizers, as in the [experiment.py](https://github.com/ionutmodo/ExperimentBuilder/blob/main/example.py) file in this repository.
-  Dictionary keys: 
-  - `workers`: specifies the number of workers in the Processing Pool that will run the different commands in parallel
-  - `param_values` is the dictionary that may contain values for multiple parameters (the cartesian product will be computed)
 - `param_name_for_exp_root_folder`: it is expected that your `~/workplace/Application/main.py` script require a parameter that specifies a root folder on the disk where you will save all your experiments to (suppose it's called `root_folder`). In this case, you must set `param_name_for_exp_root_folder='root_folder'` such that, in the `run` method, it will be given the value `os.path.join(exp_folder, exp_name)` when you run the script
-- `gpu_waiting_policy`: a dictionary containing keys `gpus` and `max_jobs_per_gpu` used to startat most `max_jobs_per_gpu` jobs on all GPUs from `gpus` in parallel
 - `debug`: set it to True if you only want to print the commands that the `ExperimentBuilder` builds. Set it to False in order to actually run those commands in a Linux environment
-<!-- - `wait_for_pid`: a dictionary containing two keys: prefix and suffixes. For example, if you want to wait for processes 1230, 1231, 123, 1233, you should set wait_for_pids={prefix=123, suffixes=[0,1,2,3]} (all should be ints for simplicity). The result is a list containing the PIDs of processes that need to finish before running this script; if None, then start the current process(es) right away. This is useful when another process is currently using the GPUs you also want to use-->
-<!-- - `wait_for_gpus`: a boolean specifying whether the ExperimentBuilder should wait `timeout_seconds` for all processes of current user to finish on all GPU cards with IDs in `gpus`. For example, if CUDA_VISIBLE_DEVICES=4,5 and you already have processes on these two GPUs, then the ExperimentBuilder will wait for these processes to finish before running the current experiment -->
 
 The command line arguments will be saved in the experiment folder in the file `arguments.txt`.
 
