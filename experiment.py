@@ -126,7 +126,6 @@ class ExperimentBuilder:
             n_workers = parallelize_dict['workers']
             params_values_dict = parallelize_dict['params_values']
             params = list(params_values_dict.keys())
-            n_params = len(params) # how many parameters we have: seed, optim, etc
 
             cart_prod = list(product(*list(params_values_dict.values())))
             for values in cart_prod:
