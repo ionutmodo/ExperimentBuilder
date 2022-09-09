@@ -69,16 +69,16 @@ def get_free_gpu(gpus, max_jobs, attempts=0):
         gpu_proc_count[i] = len(user_processes)
         # can_run_on_gpu[i] = (len(user_processes) < max_jobs)
 
-    least_busy_gpu = None
+    least_busy_gpu_count = None
+    least_busy_gpu_index = None
     for i, count in enumerate(gpu_proc_count):
         if count < max_jobs:
-            if least_busy_gpu is None:
-                least_busy_gpu = count
-            else:
-                least_busy_gpu = min(count, least_busy_gpu)
+            if least_busy_gpu_count is None or count < least_busy_gpu_count:
+                least_busy_gpu_count = count
+                least_busy_gpu_index = gpus[i]
 
-    if least_busy_gpu is not None:
-        return least_busy_gpu
+    if least_busy_gpu_count is not None:
+        return least_busy_gpu_index
 
     # # if one flag is True, then pick the gpu from that index and run on it
     # available_gpus = [i for i, flag in enumerate(can_run_on_gpu) if flag]
