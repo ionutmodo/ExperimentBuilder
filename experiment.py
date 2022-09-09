@@ -10,14 +10,13 @@ def waiting_worker(params):
     cmd, root, cmd_dict, gwp = params
 
     if on_windows():
-        gpu =
+        gpu = gwp['gpus'][0]
         print('[windows]: choosing first GPU from the list and wait ')
         # wait_for_gpus_of_user(gwp['gpus'][:1])
     else:
         gpu = get_first_free_gpu(gpus=gwp['gpus'], max_jobs=gwp['max_jobs_per_gpu'])
         print(f'[linux]: choosing gpu {gpu}')
 
-    gpu = get_first_free_gpu(gpus=gwp['gpus'], max_jobs=gwp['max_jobs_per_gpu'])
     os.makedirs(root, exist_ok=True)
 
     with open(os.path.join(root, 'arguments.txt'), 'w') as w:
