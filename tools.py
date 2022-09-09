@@ -69,5 +69,6 @@ def get_first_free_gpu(gpus, max_jobs):
             return gpus[i]
 
     # wait 60 seconds then try again
+    print(f'All GPUs in {gpus} have {max_jobs} jobs, waiting 60 seconds...')
     time.sleep(60)
     get_first_free_gpu(gpus, max_jobs)
