@@ -7,7 +7,7 @@ from tools import *
 
 
 def waiting_worker(params):
-    cmd, root, cmd_dict, gpu, max_jobs = params
+    cmd, root, cmd_dict, gpu, max_jobs, delay = params
 
     wait_for_gpus_of_user([gpu], max_jobs)
     os.makedirs(root, exist_ok=True)
@@ -23,7 +23,7 @@ def waiting_worker(params):
 
 
 class ExperimentBuilder:
-    def __init__(self, script, defaults, verbose=True):
+    def __init__(self, script, defaults=None, verbose=True):
         """
         :param script: path to script, rooted in home directory (it's automatically inserted as prefix)
         :param defaults: default cmd arguments that usually stay fixed
@@ -150,7 +150,7 @@ class ExperimentBuilder:
                     pool.map(
                         func=waiting_worker,
                         iterable=[
-                            (cmd, root, cmd_dict, gpu, gwp['max_jobs_per_gpu'])
+                            (cmd, root, cmd_dict, gpu, gwp['max_jobs_per_gpu'], random.randint(1, n_workers))
                             for cmd, root, cmd_dict, gpu in zip(cmds, root_folders, cmds_dict, assigned_gpus)
                         ])
 
