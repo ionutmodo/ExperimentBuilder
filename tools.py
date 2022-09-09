@@ -29,7 +29,7 @@ def wait_for_processes(pids, timeout_seconds=60):
             time.sleep(timeout_seconds)
 
 
-def wait_for_gpus_of_user(gpus, timeout_seconds=60):
+def wait_for_gpus_of_user(gpus, max_jobs=None, timeout_seconds=60):
     """
     This method waits `timeout_seconds` for all processes of current user to finish on all GPU cards with IDs in `gpus`
     """
@@ -42,8 +42,12 @@ def wait_for_gpus_of_user(gpus, timeout_seconds=60):
             for proc in gpus_stat[i].processes: # proc is a dict containing keys (username, command, gpu_memory_usage, pid)
                 if proc['username'] == user:
                     processes_used_by_user += 1
-        if processes_used_by_user == 0: # the script can run now
-            return
+        if max_jobs is None: # run when GPUs are free
+            if processes_used_by_user == 0: # the script can run now
+                return
+        else: # run when there are less than max_jobs
+            if processes_used_by_user < max_jobs:
+                return
 
         # block the script here
         print(f'(#{attempts}) {user} has processes running on at least one GPU from {gpus}, waiting {timeout_seconds} seconds...')

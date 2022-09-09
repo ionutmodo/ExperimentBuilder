@@ -7,16 +7,9 @@ from tools import *
 
 
 def waiting_worker(params):
-    cmd, root, cmd_dict, gwp = params
+    cmd, root, cmd_dict, gpu, max_jobs = params
 
-    if on_windows():
-        gpu = gwp['gpus'][0]
-        print('[windows]: choosing first GPU from the list and wait ')
-        # wait_for_gpus_of_user(gwp['gpus'][:1])
-    else:
-        gpu = get_free_gpu(gpus=gwp['gpus'], max_jobs=gwp['max_jobs_per_gpu'])
-        print(f'[linux]: choosing gpu {gpu}')
-
+    wait_for_gpus_of_user([gpu], max_jobs)
     os.makedirs(root, exist_ok=True)
 
     with open(os.path.join(root, 'arguments.txt'), 'w') as w:
@@ -96,6 +89,7 @@ class ExperimentBuilder:
         gwp = gpu_waiting_policy
         assert 'gpus' in gwp.keys(), 'gpu_waiting_policy requires `gpu` key'
         assert 'max_jobs_per_gpu' in gwp.keys(), 'gpu_waiting_policy requires `max_jobs_per_gpu` key'
+        n_gpus = len(gwp['gpus'])
 
         self.exp_name_template = deepcopy(exp_name)
         self.exp_folder_template = deepcopy(exp_folder)
@@ -122,12 +116,14 @@ class ExperimentBuilder:
             cmds = []
             root_folders = []
             cmds_dict = []
+            assigned_gpus = []
+
             n_workers = parallelize_dict['workers']
             params_values_dict = parallelize_dict['params_values']
             params = list(params_values_dict.keys())
 
             cart_prod = list(product(*list(params_values_dict.values())))
-            for values in cart_prod:
+            for i, values in enumerate(cart_prod):
                 for k, v in zip(params, values):
                     self.add_param(k, v)
                 # after filling in the values for HPO, go through all templated fields and fill them with the new values
@@ -145,6 +141,7 @@ class ExperimentBuilder:
                 cmds_dict.append(p)
                 root_folders.append(root_folder)
                 cmds.append(self._build_command())
+                assigned_gpus.append(gwp['gpus'][i % n_gpus])
             if debug:
                 for cmd in cmds:
                     print(cmd)
@@ -153,8 +150,8 @@ class ExperimentBuilder:
                     pool.map(
                         func=waiting_worker,
                         iterable=[
-                            (cmd, root, cmd_dict, gwp)
-                            for cmd, root, cmd_dict in zip(cmds, root_folders, cmds_dict)
+                            (cmd, root, cmd_dict, gpu, gwp['max_jobs_per_gpu'])
+                            for cmd, root, cmd_dict, gpu in zip(cmds, root_folders, cmds_dict, assigned_gpus)
                         ])
 
     def _create_root_arg(self, param_name_for_exp_root_folder, exp_folder, exp_name):
