@@ -3,6 +3,7 @@ import time
 import psutil
 import yaml
 import platform
+import random
 
 
 def on_windows():
@@ -50,7 +51,7 @@ def wait_for_gpus_of_user(gpus, timeout_seconds=60):
         time.sleep(timeout_seconds)
 
 
-def get_first_free_gpu(gpus, max_jobs, attempts=0):
+def get_free_gpu(gpus, max_jobs, attempts=0):
     """
     Returns the first GPU from `gpus` that has less than `max_jobs` running for the current user
     """
@@ -63,11 +64,12 @@ def get_first_free_gpu(gpus, max_jobs, attempts=0):
         can_run_on_gpu[i] = (len(user_processes) < max_jobs)
 
     # if one flag is True, then pick the gpu from that index and run on it
-    for i, flag in enumerate(can_run_on_gpu):
-        if flag:
-            return gpus[i]
+    available_gpus = [i for i, flag in enumerate(can_run_on_gpu) if flag]
+    if len(available_gpus) > 0:
+        gpu = random.choice(available_gpus)
+        return gpu
 
     # wait 60 seconds then try again
     print(f'All GPUs in {gpus} have {max_jobs} jobs, waiting 60 seconds...')
     time.sleep(60)
-    get_first_free_gpu(gpus, max_jobs, attempts+1)
+    get_free_gpu(gpus, max_jobs, attempts + 1)

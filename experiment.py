@@ -14,7 +14,7 @@ def waiting_worker(params):
         print('[windows]: choosing first GPU from the list and wait ')
         # wait_for_gpus_of_user(gwp['gpus'][:1])
     else:
-        gpu = get_first_free_gpu(gpus=gwp['gpus'], max_jobs=gwp['max_jobs_per_gpu'])
+        gpu = get_free_gpu(gpus=gwp['gpus'], max_jobs=gwp['max_jobs_per_gpu'])
         print(f'[linux]: choosing gpu {gpu}')
 
     os.makedirs(root, exist_ok=True)
@@ -113,7 +113,7 @@ class ExperimentBuilder:
                     gpu = gwp['gpus'][0]
                     print('[windows]: choosing first GPU from the list')
                 else:
-                    gpu = get_first_free_gpu(gpus=gwp['gpus'], max_jobs=gwp['max_jobs_per_gpu'])
+                    gpu = get_free_gpu(gpus=gwp['gpus'], max_jobs=gwp['max_jobs_per_gpu'])
                     print(f'[linux]: chose gpu {gpu}')
                 os.system(f'CUDA_VISIBLE_DEVICES={gpu} {cmd}')
             print('EXPERIMENT ENDED')
