@@ -10,6 +10,7 @@ def waiting_worker(params):
     cmd, root, cmd_dict, gpu, max_jobs, delay, gwp = params
 
     # wait_for_gpus_of_user([gpu], max_jobs)
+    time.sleep(delay)
     gpu = get_free_gpu(gwp['gpus'], gwp['max_jobs_per_gpu'])
     os.makedirs(root, exist_ok=True)
 
