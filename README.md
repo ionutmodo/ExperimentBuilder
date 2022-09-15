@@ -43,6 +43,7 @@ There is also support for boolean command line arguments. For example, if you us
 After you added all required arguments (either in constructor using `defaults` or by calling `add_param` method), you should call the `run` method, with the following parameters:
 - `scheduling`: a dictionary containing the following keys:
   - `gpus` is a list containing IDs of GPUs you want to run the tasks on
+  - `distributed_training` a boolean indicating whether the experiment uses DataParallel or not
   - `max_jobs_per_gpu` specifies how many processes should run on each GPU at most (num_workers = len(gpus) * max_jobs_per_gpu)
   - `param_values` is the dictionary that contains values for multiple parameters (the cartesian product will be computed)
   - see [experiment.py](https://github.com/ionutmodo/ExperimentBuilder/blob/main/example.py) for more details

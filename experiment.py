@@ -6,17 +6,26 @@ from tools import *
 
 
 def waiting_worker(params):
-    cmd, root, cmd_dict, gpu_processes_count, max_jobs, gpus = params
+    cmd, root, cmd_dict, gpu_processes_count, max_jobs, gpus, dist_train = params
     n_gpus = len(gpus)
     time.sleep(random.randint(1, n_gpus * max_jobs))
-    while True:
-        gpu, count = sorted(gpu_processes_count.items(), key=lambda item: item[1])[0] # sort ASC by processes count
-        if count < max_jobs:
-            gpu_processes_count[gpu] += 1
-            break
 
-        print(f'All GPUs in have {max_jobs} jobs, waiting 60 seconds...')
-        time.sleep(60)
+    if not dist_train:
+        while True:
+            sorted_items = sorted(gpu_processes_count.items(), key=lambda item: item[1])
+            gpu, count = sorted_items[0] # sort ASC by processes count
+
+            # if there are multiple GPUs with minimal number of processes, then pick a random GPU from them
+            i = 1
+            while i < n_gpus and sorted_items[i][0] == count:
+                i += 1
+            if count < max_jobs:
+                gpu = random.choice([c for g, c in sorted_items[:i]])
+                gpu_processes_count[gpu] += 1
+                break
+
+            print(f'All GPUs in have {max_jobs} jobs, waiting 60 seconds...')
+            time.sleep(60)
 
     os.makedirs(root, exist_ok=True)
 
@@ -25,10 +34,18 @@ def waiting_worker(params):
             if k.startswith('_'):
                 w.write(f'{k[1:]}={v}\n')
 
-    cmd = f'CUDA_VISIBLE_DEVICES={gpu} {cmd}'
+    if dist_train:
+        cvd = f'CUDA_VISIBLE_DEVICES={os.environ["CUDA_VISIBLE_DEVICES"]}'
+    else:
+        cvd = f'CUDA_VISIBLE_DEVICES={gpu}'
+
+    cmd = f'{cvd} {cmd}'
+
     print(cmd)
     os.system(cmd)
-    gpu_processes_count[gpu] -= 1
+
+    if not dist_train:
+        gpu_processes_count[gpu] -= 1
 
 
 class ExperimentBuilder:
@@ -84,21 +101,26 @@ class ExperimentBuilder:
         :param param_name_for_exp_root_folder: the cmd argument name for the output directory
         :param scheduling: a dictionary containing keys `gpus`, `max_jobs_per_gpu`, `params_values`
             - `gpus` is a list containing IDs of GPUs you want to run the tasks on
+            - `distributed_training` a boolean indicating whether the experiment uses DataParallel or not
             - `max_jobs_per_gpu` specifies how many processes should run on each GPU at most (num_workers = len(gpus) * max_jobs_per_gpu)
             - `param_values` is the dictionary that contains values for multiple parameters (the cartesian product will be computed)
         :param debug: print commands if True, run commands if False
         """
         assert 'gpus' in scheduling.keys(), 'scheduling requires `gpu` key'
-        assert 'max_jobs_per_gpu' in scheduling.keys(), 'scheduling requires `max_jobs_per_gpu` key'
         assert 'params_values' in scheduling.keys(), 'scheduling requires `params_values` key'
-
+        assert 'max_jobs_per_gpu' in scheduling.keys(), 'scheduling requires `max_jobs_per_gpu` key'
+        assert 'distributed_training' in scheduling.keys(), 'scheduling requires `distributed_training` key'
         """
-        scheduling['gpus']
-        scheduling['max_jobs_per_gpu']
-        scheduling['params_values']
+            scheduling['gpus']
+            scheduling['max_jobs_per_gpu']
+            scheduling['params_values']
+            scheduling['distributed_training']
         """
         n_gpus = len(scheduling['gpus'])
-        n_workers = n_gpus * scheduling['max_jobs_per_gpu']
+        if scheduling['distributed_training']: # use all GPUs for a single run (distributed training)
+            n_workers = scheduling['max_jobs_per_gpu']
+        else: # use GPUs to run one experiment per GPU
+            n_workers = n_gpus * scheduling['max_jobs_per_gpu']
 
         self.exp_name_template = deepcopy(exp_name)
         self.exp_folder_template = deepcopy(exp_folder)
@@ -107,8 +129,8 @@ class ExperimentBuilder:
             os.system('clear')
 
         cmds = []
-        root_folders = []
         cmds_dict = []
+        root_folders = []
 
         params = list(scheduling['params_values'].keys())
 
@@ -144,7 +166,7 @@ class ExperimentBuilder:
                 pool.map(
                     func=waiting_worker,
                     iterable=[
-                        (cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'])
+                        (cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training'])
                         for cmd, root, cmd_dict, in zip(cmds, root_folders, cmds_dict)
                     ])
 
