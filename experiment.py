@@ -180,9 +180,11 @@ class ExperimentBuilder:
         This method fills in the `template` given as parameter with values stored in `self.__dict__`.
         If the template uses a variable which is not in `self.__dict__` yet, the method returns the template again
         because that parameter is expected to be set in `parallelize_dict`. This way, this parameter is not lost
-        :param template: the template to be filled
+        :param template: the template to be filled. if it's string, then it's immediately returned
         :return: a string containing the template with substitutions or the same template
         """
+        if isinstance(template, str):
+            return template
         try:
             d = {}
             for key, val in self.__dict__.items():
