@@ -36,7 +36,7 @@ def waiting_worker(params):
                 w.write(f'{k[1:]}={v}\n')
 
     if dist_train:
-        cvd = f'CUDA_VISIBLE_DEVICES={os.environ["CUDA_VISIBLE_DEVICES"]}'
+        cvd = f'CUDA_VISIBLE_DEVICES={",".join(gpus)}'
     else:
         cvd = f'CUDA_VISIBLE_DEVICES={gpu}'
 
