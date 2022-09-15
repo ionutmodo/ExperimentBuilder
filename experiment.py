@@ -6,7 +6,8 @@ from tools import *
 
 
 def waiting_worker(params):
-    cmd, root, cmd_dict, gpu_processes_count, max_jobs, gpus, dist_train = params
+    # cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training']
+    cmd, root, cmd_dict, gpu_processes_count, gpus, max_jobs, dist_train = params
     n_gpus = len(gpus)
     time.sleep(random.randint(1, n_gpus * max_jobs))
 
