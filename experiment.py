@@ -3,11 +3,17 @@ from string import Template
 from itertools import product
 from copy import deepcopy
 from tools import *
+import random
 
 
 def waiting_worker(params):
     # cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training']
     cmd, root, cmd_dict, gpu_processes_count, gpus, max_jobs, dist_train = params
+
+    random.seed(None)
+    for _ in range(3):
+        random.shuffle(gpus)
+
     n_gpus = len(gpus)
     time.sleep(random.randint(1, n_gpus * max_jobs))
 
