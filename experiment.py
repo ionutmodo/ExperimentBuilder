@@ -27,7 +27,7 @@ def waiting_worker(params):
             while i < n_gpus and sorted_items[i][0] == count:
                 i += 1
             if count < max_jobs:
-                gpu = random.choice([c for g, c in sorted_items[:i]])
+                gpu = random.choice([g for g, c in sorted_items[:i]])
                 gpu_processes_count[gpu] += 1
                 break
 
@@ -168,6 +168,8 @@ class ExperimentBuilder:
             gpu_processes_count = manager.dict()
             for gpu in scheduling['gpus']:
                 gpu_processes_count[gpu] = 0
+
+            # print(f'gpu_processes_count: {gpu_processes_count}')
 
             with mp.Pool(processes=n_workers) as pool:
                 pool.map(
