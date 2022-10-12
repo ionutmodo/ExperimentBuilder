@@ -1,11 +1,12 @@
 import os
+import time
 
 
 LOCK_FILE = 'locker.lock'
 
 def lock_acquire():
     while os.path.isfile(LOCK_FILE):
-        pass
+        time.sleep(0.5)
     open(LOCK_FILE, 'w').close()
 
 
