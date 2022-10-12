@@ -4,6 +4,7 @@ from itertools import product
 from copy import deepcopy
 from tools import *
 import random
+from file_locker import *
 
 
 def waiting_worker(params):
@@ -28,7 +29,9 @@ def waiting_worker(params):
                 i += 1
             if count < max_jobs:
                 gpu = random.choice([g for g, c in sorted_items[:i]])
+                lock_acquire()
                 gpu_processes_count[gpu] += 1
+                lock_release()
                 break
 
             print(f'All GPUs in have {max_jobs} jobs, waiting 60 seconds...')
@@ -52,8 +55,9 @@ def waiting_worker(params):
     os.system(cmd)
 
     if not dist_train:
+        lock_acquire()
         gpu_processes_count[gpu] -= 1
-
+        lock_release()
 
 class ExperimentBuilder:
     def __init__(self, script, defaults=None, verbose=True):
