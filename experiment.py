@@ -16,7 +16,7 @@ def waiting_worker(params):
         random.shuffle(gpus)
 
     n_gpus = len(gpus)
-    time.sleep(random.randint(1, n_gpus * max_jobs))
+    # time.sleep(random.randint(1, n_gpus * max_jobs))
 
     if not dist_train:
         while True:
