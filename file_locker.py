@@ -13,4 +13,7 @@ def lock_acquire():
 
 def lock_release():
     if os.path.isfile(LOCK_FILE):
-        os.remove(LOCK_FILE)
+        try:
+            os.remove(LOCK_FILE)
+        except:
+            pass
