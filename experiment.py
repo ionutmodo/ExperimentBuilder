@@ -9,14 +9,15 @@ from file_locker import *
 
 def waiting_worker(params):
     # cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training']
-    cmd, root, cmd_dict, gpu_processes_count, gpus, max_jobs, dist_train = params
+    index, cmd, root, cmd_dict, gpu_processes_count, gpus, max_jobs, dist_train = params
 
-    random.seed(None)
-    for _ in range(3):
-        random.shuffle(gpus)
+    # random.seed(None)
+    # for _ in range(3):
+    #     random.shuffle(gpus)
 
     n_gpus = len(gpus)
     # time.sleep(random.randint(1, n_gpus * max_jobs))
+    time.sleep(index + 3)
 
     if not dist_train:
         while True:
@@ -58,6 +59,7 @@ def waiting_worker(params):
         lock_acquire()
         gpu_processes_count[gpu] -= 1
         lock_release()
+
 
 class ExperimentBuilder:
     def __init__(self, script, defaults=None, verbose=True):
@@ -179,8 +181,8 @@ class ExperimentBuilder:
                 pool.map(
                     func=waiting_worker,
                     iterable=[
-                        (cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training'])
-                        for cmd, root, cmd_dict, in zip(cmds, root_folders, cmds_dict)
+                        (index, cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training'])
+                        for index, (cmd, root, cmd_dict) in enumerate(zip(cmds, root_folders, cmds_dict))
                     ])
 
     def _create_root_arg(self, param_name_for_exp_root_folder, exp_folder, exp_name):

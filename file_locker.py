@@ -4,6 +4,7 @@ import time
 
 LOCK_FILE = 'locker.lock'
 
+# https://github.com/dmfrey/FileLock/blob/master/filelock/filelock.py
 
 def lock_acquire():
     while True:
