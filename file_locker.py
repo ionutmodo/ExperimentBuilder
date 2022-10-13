@@ -6,7 +6,7 @@ LOCK_FILE = 'locker.lock'
 
 def lock_acquire():
     while os.path.isfile(LOCK_FILE):
-        time.sleep(0.5)
+        time.sleep(0.01)
     open(LOCK_FILE, 'w').close()
 
 
