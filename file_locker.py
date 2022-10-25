@@ -5,6 +5,8 @@ import time
 LOCK_FILE = 'locker.lock'
 
 # https://github.com/dmfrey/FileLock/blob/master/filelock/filelock.py
+# https://superfastpython.com/multiprocessing-pool-mutex-lock/
+
 
 def lock_acquire():
     while True:

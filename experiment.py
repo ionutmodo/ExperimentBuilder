@@ -178,6 +178,7 @@ class ExperimentBuilder:
             # print(f'gpu_processes_count: {gpu_processes_count}')
 
             with mp.Pool(processes=n_workers) as pool:
+                lock_release() # make sure there are no lock files on disk before starting pool
                 pool.map(
                     func=waiting_worker,
                     iterable=[
