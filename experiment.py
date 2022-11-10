@@ -50,7 +50,8 @@ def waiting_worker(params):
     else:
         cvd = f'CUDA_VISIBLE_DEVICES={gpu}'
 
-    cmd = f'{cvd} {cmd}'
+    if not on_windows():
+        cmd = f'{cvd} {cmd}'
 
     print(cmd)
     os.system(cmd)
