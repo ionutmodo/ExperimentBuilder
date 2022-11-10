@@ -79,9 +79,10 @@ class ExperimentBuilder:
                 self.add_param(k, v)
 
     def add_from_yaml(self, yaml_file):
-        data = read_yaml(yaml_file)
-        for k, v in data.items():
-            self.add_param(name=k, value=v)
+        if os.path.isfile(yaml_file):
+            data = read_yaml(yaml_file)
+            for k, v in data.items():
+                self.add_param(name=k, value=v)
 
     def add_param(self, name, value):
         """
