@@ -31,6 +31,7 @@ def main():
     exp.run(
         debug=True,
         scheduling=dict(
+            distributed_training=False,
             gpus=[4, 5, 6, 7],
             max_jobs_per_gpu=4,
             params_values=dict(seed=[111, 222], optim=['adam', 'sgd'])),
