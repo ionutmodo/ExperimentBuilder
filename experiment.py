@@ -7,6 +7,24 @@ import random
 from file_locker import *
 
 
+FW_DICT = {'.': 'DOT', '-': 'DASH'}
+BW_DICT = {v: k for k, v in FW_DICT.items()}
+
+
+def key_replace(d, key):
+    for dk, dv in d.items():
+        key = key.replace(dk, dv)
+    return key
+
+
+def forward_key_replace(key):
+    return key_replace(FW_DICT, key)
+
+
+def backward_key_replace(key):
+    return key_replace(BW_DICT, key)
+
+
 def waiting_worker(params):
     # cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training']
     index, cmd, root, cmd_dict, gpu_processes_count, gpus, max_jobs, dist_train = params
@@ -91,17 +109,15 @@ class ExperimentBuilder:
         :param value: The value for the parameter. If it's a Template, it will be filled in with the values of already existing parameters
         :return:
         """
+
         if value is not None:
             if isinstance(value, list):
                 value = ' '.join(map(str, value))
-                setattr(self, f'_{name}', value)
             elif isinstance(value, Template):
                 setattr(self, f'template_{name}', deepcopy(value))
-                setattr(self, f'_{name}', None)
                 # setattr(self, f'_{name}', self._fill_template(value)) # to avoid dict-changed-size error
-            else:
-                setattr(self, f'_{name}', value)
-
+            name = forward_key_replace(name)
+            setattr(self, f'_{name}', value)
 
     def run(self,
             exp_folder: Template,
@@ -221,12 +237,12 @@ class ExperimentBuilder:
             if k.startswith('_'):
                 if isinstance(v, bool):  # we have a parameter that does not have a value, but its presence or absence means True or False
                     if v:
-                        params.append(f'--{k}')
+                        params.append(f'--{backward_key_replace(k)}')
                 elif isinstance(v, Template):
                     # elif isinstance(v, str) and '${' in v:
-                    params.append(f'--{k} {self._fill_template(v)}')
+                    params.append(f'--{backward_key_replace(k)} {self._fill_template(v)}')
                 else:
-                    params.append(f'--{k} {str(v)}')
+                    params.append(f'--{backward_key_replace(k)} {str(v)}')
         params = ' '.join(params).replace('--_', '--')
         return f'python {self.script} {params}'
 
