@@ -111,13 +111,16 @@ class ExperimentBuilder:
         """
 
         if value is not None:
+            name = forward_key_replace(name)
             if isinstance(value, list):
                 value = ' '.join(map(str, value))
+                setattr(self, f'_{name}', value)
             elif isinstance(value, Template):
                 setattr(self, f'template_{name}', deepcopy(value))
+                setattr(self, f'_{name}', None)
                 # setattr(self, f'_{name}', self._fill_template(value)) # to avoid dict-changed-size error
-            name = forward_key_replace(name)
-            setattr(self, f'_{name}', value)
+            else:
+                setattr(self, f'_{name}', value)
 
     def run(self,
             exp_folder: Template,
