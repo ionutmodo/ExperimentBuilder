@@ -89,7 +89,6 @@ class ExperimentBuilder:
         """
         self.script = script
         self.verbose = verbose
-        self.exp_name_template = None
         self.exp_folder_template = None
 
         if defaults is not None:
@@ -124,14 +123,11 @@ class ExperimentBuilder:
 
     def run(self,
             exp_folder: Template,
-            exp_name: Template,
             param_name_for_exp_root_folder: str,
             scheduling: dict,
             debug: bool = False):
         """
         :param exp_folder: absolute path of the root folder where you want your experiments to be
-        :param exp_name: template used to generate experiment name
-            The placeholders name should be the parameter names added using add_param method
         :param param_name_for_exp_root_folder: the cmd argument name for the output directory
         :param scheduling: a dictionary containing keys `gpus`, `max_jobs_per_gpu`, `params_values`
             - `gpus` is a list containing IDs of GPUs you want to run the tasks on
@@ -156,7 +152,6 @@ class ExperimentBuilder:
         else: # use GPUs to run one experiment per GPU
             n_workers = n_gpus * scheduling['max_jobs_per_gpu']
 
-        self.exp_name_template = deepcopy(exp_name)
         self.exp_folder_template = deepcopy(exp_folder)
 
         if not on_windows():
@@ -180,8 +175,7 @@ class ExperimentBuilder:
 
             root_folder = self._create_root_arg(
                 param_name_for_exp_root_folder,
-                self.exp_folder_template,
-                self.exp_name_template)
+                self.exp_folder_template)
 
             p = {k: v for k, v in self.__dict__.items() if k.startswith('_')}
             cmds_dict.append(p)
@@ -207,8 +201,8 @@ class ExperimentBuilder:
                         for index, (cmd, root, cmd_dict) in enumerate(zip(cmds, root_folders, cmds_dict))
                     ])
 
-    def _create_root_arg(self, param_name_for_exp_root_folder, exp_folder, exp_name):
-        exp_root_folder = os.path.join(self._fill_template(exp_folder), self._fill_template(exp_name))
+    def _create_root_arg(self, param_name_for_exp_root_folder, exp_folder):
+        exp_root_folder = self._fill_template(exp_folder)
         self.add_param(param_name_for_exp_root_folder, exp_root_folder)
         return exp_root_folder
 
