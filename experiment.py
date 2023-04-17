@@ -183,7 +183,7 @@ class ExperimentBuilder:
             cmds.append(self._build_command())
         if debug:
             for cmd in cmds:
-                print(cmd)
+                print(cmd.replace('\\', '/'))
         else:
             manager = mp.Manager()
             gpu_processes_count = manager.dict()
