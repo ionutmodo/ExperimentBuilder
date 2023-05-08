@@ -71,7 +71,7 @@ def waiting_worker(params):
     clb = 'CUDA_LAUNCH_BLOCKING=1' if launch_blocking else ''
 
     if not on_windows():
-        cmd = f'{clb}{cvd} {cmd}'
+        cmd = f'{clb} {cvd} {cmd}'.strip()
 
     print(cmd)
     os.system(cmd)
