@@ -27,7 +27,7 @@ def backward_key_replace(key):
 
 def waiting_worker(params):
     # cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training']
-    index, cmd, root, cmd_dict, gpu_processes_count, gpus, max_jobs, dist_train = params
+    index, cmd, root, cmd_dict, gpu_processes_count, gpus, max_jobs, dist_train, launch_blocking = params
 
     # random.seed(None)
     # for _ in range(3):
@@ -68,8 +68,12 @@ def waiting_worker(params):
     else:
         cvd = f'CUDA_VISIBLE_DEVICES={gpu}'
 
+    clb = ''
+    if launch_blocking:
+        clb = 'CUDA_LAUNCH_BLOCKING=1'
+
     if not on_windows():
-        cmd = f'{cvd} {cmd}'
+        cmd = f'{clb}{cvd} {cmd}'
 
     print(cmd)
     os.system(cmd)
@@ -125,7 +129,8 @@ class ExperimentBuilder:
             exp_folder: Template,
             param_name_for_exp_root_folder: str,
             scheduling: dict,
-            debug: bool = False):
+            debug: bool = False,
+            launch_blocking: bool = False):
         """
         :param exp_folder: absolute path of the root folder where you want your experiments to be
         :param param_name_for_exp_root_folder: the cmd argument name for the output directory
@@ -135,6 +140,7 @@ class ExperimentBuilder:
             - `max_jobs_per_gpu` specifies how many processes should run on each GPU at most (num_workers = len(gpus) * max_jobs_per_gpu)
             - `param_values` is the dictionary that contains values for multiple parameters (the cartesian product will be computed)
         :param debug: print commands if True, run commands if False
+        :param launch_blocking: whether to run with CUDA_LAUNCH_BLOCKING or not
         """
         assert 'gpus' in scheduling.keys(), 'scheduling requires `gpu` key'
         assert 'params_values' in scheduling.keys(), 'scheduling requires `params_values` key'
@@ -183,6 +189,8 @@ class ExperimentBuilder:
             cmds.append(self._build_command())
         if debug:
             for cmd in cmds:
+                if launch_blocking:
+                    print('CUDA_LAUNCH_BLOCKING=1 ', end='')
                 print(cmd.replace('\\', '/'))
         else:
             manager = mp.Manager()
@@ -197,7 +205,7 @@ class ExperimentBuilder:
                 pool.map(
                     func=waiting_worker,
                     iterable=[
-                        (index, cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training'])
+                        (index, cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training'], launch_blocking)
                         for index, (cmd, root, cmd_dict) in enumerate(zip(cmds, root_folders, cmds_dict))
                     ])
 
