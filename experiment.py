@@ -68,9 +68,7 @@ def waiting_worker(params):
     else:
         cvd = f'CUDA_VISIBLE_DEVICES={gpu}'
 
-    clb = ''
-    if launch_blocking:
-        clb = 'CUDA_LAUNCH_BLOCKING=1'
+    clb = 'CUDA_LAUNCH_BLOCKING=1' if launch_blocking else ''
 
     if not on_windows():
         cmd = f'{clb}{cvd} {cmd}'
