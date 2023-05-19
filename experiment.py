@@ -89,6 +89,7 @@ class ExperimentBuilder:
         :param defaults: default cmd arguments that usually stay fixed
         :param CUDA_VISIBLE_DEVICES: value to initialize CUDA_VISIBLE_DEVICES env variable
         """
+        print(f'ExperimentBuilder PID: {os.getpid()}')
         self.script = script
         self.verbose = verbose
         self.exp_folder_template = None
