@@ -4,6 +4,7 @@ from itertools import product
 from copy import deepcopy
 from tools import *
 import random
+import os, sys
 from file_locker import *
 
 
@@ -89,7 +90,6 @@ class ExperimentBuilder:
         :param defaults: default cmd arguments that usually stay fixed
         :param CUDA_VISIBLE_DEVICES: value to initialize CUDA_VISIBLE_DEVICES env variable
         """
-        print(f'ExperimentBuilder PID: {os.getpid()}')
         self.script = script
         self.verbose = verbose
         self.exp_folder_template = None
@@ -154,7 +154,7 @@ class ExperimentBuilder:
 
         # remove duplicate values to avoid wasting computations
         for k in scheduling['params_values'].keys():
-            scheduling['params_values'][k] = list(set(scheduling['params_values']))
+            scheduling['params_values'][k] = list(set(scheduling['params_values'][k]))
 
         n_gpus = len(scheduling['gpus'])
         if scheduling['distributed_training']: # use all GPUs for a single run (distributed training)
@@ -166,6 +166,7 @@ class ExperimentBuilder:
 
         if not on_windows():
             os.system('clear')
+            print(f'ExperimentBuilder PID: {os.getpid()}')
 
         cmds = []
         cmds_dict = []
