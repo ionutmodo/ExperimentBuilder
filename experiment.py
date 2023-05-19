@@ -152,7 +152,7 @@ class ExperimentBuilder:
         """
 
         # remove duplicate values to avoid wasting computations
-        for k in scheduling['params_values']:
+        for k in scheduling['params_values'].keys():
             scheduling['params_values'][k] = list(set(scheduling['params_values']))
 
         n_gpus = len(scheduling['gpus'])
