@@ -150,6 +150,11 @@ class ExperimentBuilder:
             scheduling['params_values']
             scheduling['distributed_training']
         """
+
+        # remove duplicate values to avoid wasting computations
+        for k in scheduling['params_values']:
+            scheduling['params_values'][k] = list(set(scheduling['params_values']))
+
         n_gpus = len(scheduling['gpus'])
         if scheduling['distributed_training']: # use all GPUs for a single run (distributed training)
             n_workers = scheduling['max_jobs_per_gpu']
