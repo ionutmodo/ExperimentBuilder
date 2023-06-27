@@ -28,7 +28,9 @@ def backward_key_replace(key):
 
 def waiting_worker(params):
     # cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training']
-    index, cmd, root, cmd_dict, gpu_processes_count, gpus, max_jobs, dist_train, launch_blocking = params
+    # index, cmd, root, cmd_dict, gpu_processes_count, gpus, max_jobs, dist_train, launch_blocking = params
+    index, cmd, root, cmd_dict, gpu_processes_count, scheduling, launch_blocking = params
+    gpus, max_jobs, dist_train = scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training']
 
     # random.seed(None)
     # for _ in range(3):
@@ -211,13 +213,21 @@ class ExperimentBuilder:
 
             with mp.Pool(processes=n_workers) as pool:
                 lock_release() # make sure there are no lock files on disk before starting pool
-                pool.map(
-                    func=waiting_worker,
-                    iterable=[
-                        (index, cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training'], launch_blocking)
-                        for index, (cmd, root, cmd_dict) in enumerate(zip(cmds, root_folders, cmds_dict))
-                        if not os.path.isfile(os.path.join(root, 'state.finished'))
-                    ])
+
+                cmds_total, cmds_runnable = 0, 0
+                params_list = []
+                for index, (cmd, root, cmd_dict) in enumerate(zip(cmds, root_folders, cmds_dict)):
+                    cmds_total += 1
+                    if not os.path.isfile(os.path.join(root, 'state.finished')):
+                        cmds_runnable += 1
+                        params_list.append((index, cmd, root, cmd_dict, gpu_processes_count, scheduling, launch_blocking))
+
+                print(f'Commands:\n\tRunnable: {cmds_runnable}\n\tFinished: {cmds_total - cmds_runnable}\n\tTotal: {cmds_total}')
+                time.sleep(10)
+
+                pool.map(func=waiting_worker, iterable=params_list)
+        print('ExperimentBuilder process ended')
+        print(f'Commands:\n\tRunnable: {cmds_runnable}\n\tFinished: {cmds_total - cmds_runnable}\n\tTotal: {cmds_total}')
 
     def _create_root_arg(self, param_name_for_exp_root_folder, exp_folder):
         exp_root_folder = self._fill_template(exp_folder)
