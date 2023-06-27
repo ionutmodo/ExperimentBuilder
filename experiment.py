@@ -211,21 +211,21 @@ class ExperimentBuilder:
 
             # print(f'gpu_processes_count: {gpu_processes_count}')
 
-            with mp.Pool(processes=n_workers) as pool:
-                lock_release() # make sure there are no lock files on disk before starting pool
+            cmds_total, cmds_runnable = 0, 0
+            params_list = []
+            for index, (cmd, root, cmd_dict) in enumerate(zip(cmds, root_folders, cmds_dict)):
+                cmds_total += 1
+                if not os.path.isfile(os.path.join(root, 'state.finished')):
+                    cmds_runnable += 1
+                    params_list.append((index, cmd, root, cmd_dict, gpu_processes_count, scheduling, launch_blocking))
 
-                cmds_total, cmds_runnable = 0, 0
-                params_list = []
-                for index, (cmd, root, cmd_dict) in enumerate(zip(cmds, root_folders, cmds_dict)):
-                    cmds_total += 1
-                    if not os.path.isfile(os.path.join(root, 'state.finished')):
-                        cmds_runnable += 1
-                        params_list.append((index, cmd, root, cmd_dict, gpu_processes_count, scheduling, launch_blocking))
+            print(f'Commands:\n\tRunnable: {cmds_runnable}\n\tFinished: {cmds_total - cmds_runnable}\n\tTotal: {cmds_total}')
+            time.sleep(10)
 
-                print(f'Commands:\n\tRunnable: {cmds_runnable}\n\tFinished: {cmds_total - cmds_runnable}\n\tTotal: {cmds_total}')
-                time.sleep(10)
-
-                pool.map(func=waiting_worker, iterable=params_list)
+            if cmds_runnable > 0:
+                with mp.Pool(processes=n_workers) as pool:
+                    lock_release() # make sure there are no lock files on disk before starting pool
+                    pool.map(func=waiting_worker, iterable=params_list)
         print('ExperimentBuilder process ended')
         print(f'Commands:\n\tRunnable: {cmds_runnable}\n\tFinished: {cmds_total - cmds_runnable}\n\tTotal: {cmds_total}')
 
