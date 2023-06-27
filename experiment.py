@@ -77,6 +77,10 @@ def waiting_worker(params):
     print(cmd)
     os.system(cmd)
 
+    state_file = os.path.join(root, 'state.finished')
+    with open(state_file, 'w') as w:
+        pass
+
     if not dist_train:
         lock_acquire()
         gpu_processes_count[gpu] -= 1
@@ -212,6 +216,7 @@ class ExperimentBuilder:
                     iterable=[
                         (index, cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training'], launch_blocking)
                         for index, (cmd, root, cmd_dict) in enumerate(zip(cmds, root_folders, cmds_dict))
+                        if not os.path.isfile(os.path.join(root, 'state.finished'))
                     ])
 
     def _create_root_arg(self, param_name_for_exp_root_folder, exp_folder):
