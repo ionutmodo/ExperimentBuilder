@@ -4,6 +4,7 @@ from itertools import product
 from copy import deepcopy
 from tools import *
 import random
+from tqdm import tqdm
 import os, sys
 from file_locker import *
 
@@ -220,7 +221,10 @@ class ExperimentBuilder:
                     params_list.append((index, cmd, root, cmd_dict, gpu_processes_count, scheduling, launch_blocking))
 
             print(f'Commands:\n\tRunnable: {cmds_runnable}\n\tFinished: {cmds_total - cmds_runnable}\n\tTotal: {cmds_total}')
-            time.sleep(10)
+            print()
+            print('Waiting 5 seconds...')
+            for _ in tqdm(range(5)):
+                time.sleep(1)
 
             if cmds_runnable > 0:
                 with mp.Pool(processes=n_workers) as pool:
