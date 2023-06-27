@@ -29,9 +29,7 @@ def backward_key_replace(key):
 
 def waiting_worker(params):
     # cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training']
-    # index, cmd, root, cmd_dict, gpu_processes_count, gpus, max_jobs, dist_train, launch_blocking = params
-    index, cmd, root, cmd_dict, gpu_processes_count, scheduling, launch_blocking = params
-    gpus, max_jobs, dist_train = scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training']
+    index, cmd, root, cmd_dict, gpu_processes_count, gpus, max_jobs, dist_train, launch_blocking = params
 
     # random.seed(None)
     # for _ in range(3):
@@ -214,19 +212,25 @@ class ExperimentBuilder:
 
             cmds_total, cmds_runnable = 0, 0
             params_list = []
-            for index, (cmd, root, cmd_dict) in enumerate(zip(cmds, root_folders, cmds_dict)):
+            for cmd, root, cmd_dict in zip(cmds, root_folders, cmds_dict):
                 cmds_total += 1
                 if not os.path.isfile(os.path.join(root, 'state.finished')):
                     cmds_runnable += 1
-                    params_list.append((index, cmd, root, cmd_dict, gpu_processes_count, scheduling, launch_blocking))
+                    params_list.append([cmd, root, cmd_dict])
 
-            print(f'Commands:\n\tRunnable: {cmds_runnable}\n\tFinished: {cmds_total - cmds_runnable}\n\tTotal: {cmds_total}')
-            print()
-            print('Waiting 5 seconds...')
+            print(f'Commands:\n\tRunnable: {cmds_runnable}\n\tFinished: {cmds_total - cmds_runnable}\n\tTotal: {cmds_total}\n\nWaiting 5 seconds...')
             for _ in tqdm(range(5)):
                 time.sleep(1)
 
             if cmds_runnable > 0:
+                gpus = scheduling['gpus']
+                max_jobs_per_gpu = scheduling['max_jobs_per_gpu']
+                distributed_training = scheduling['distributed_training']
+                params_list = [
+                    (index, *tpl, gpu_processes_count, gpus, max_jobs_per_gpu, distributed_training, launch_blocking)
+                    for index, tpl in enumerate(params_list)
+                ]
+
                 with mp.Pool(processes=n_workers) as pool:
                     lock_release() # make sure there are no lock files on disk before starting pool
                     pool.map(func=waiting_worker, iterable=params_list)
