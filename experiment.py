@@ -78,9 +78,9 @@ def waiting_worker(params):
     print(cmd)
     os.system(cmd)
 
-    state_file = os.path.join(root, 'state.finished')
-    with open(state_file, 'w') as w:
-        pass
+    # state_file = os.path.join(root, 'state.finished')
+    # with open(state_file, 'w') as w:
+    #     pass
 
     if not dist_train:
         lock_acquire()
