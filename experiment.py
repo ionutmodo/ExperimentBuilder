@@ -77,7 +77,7 @@ def waiting_worker(params):
     if torchrun:
         cmd = f'{clb} {cvd} torchrun --standalone --nnodes=1 --nproc-per-node={n_gpus} {cmd}'.strip()
     else:
-        cmd = f'{clb} {cvd} {cmd}'.strip()
+        cmd = f'{clb} {cvd} python {cmd}'.strip()
 
     print(cmd)
     if not on_windows():
@@ -205,13 +205,6 @@ class ExperimentBuilder:
             root_folders.append(root_folder)
             cmds.append(self._build_command())
         if debug:
-            # if not on_windows():
-            #     if torchrun:
-            #         cmd = f'{clb} {cvd} torchrun --standalone --nnodes=1 --nproc-per-node={n_gpus} {cmd}'.strip()
-            #     else:
-            #         cmd = f'{clb} {cvd} {cmd}'.strip()
-
-            clb = 'CUDA_LAUNCH_BLOCKING=1' if launch_blocking else ''
             for cmd in cmds:
                 print(cmd.replace('\\', '/'))
         else:
@@ -289,7 +282,7 @@ class ExperimentBuilder:
                 else:
                     params.append(f'--{backward_key_replace(k)} {str(v)}')
         params = ' '.join(params).replace('--_', '--')
-        return f'python {self.script} {params}'
+        return f'{self.script} {params}'
 
     def __getattr__(self, item):
         return self.__dict__[f'_{item}']
