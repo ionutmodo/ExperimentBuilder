@@ -177,7 +177,7 @@ class ExperimentBuilder:
         self.exp_folder_template = deepcopy(exp_folder)
 
         if not on_windows():
-            os.system('clear')
+            os.system('/usr/bin/clear')
             print(f'ExperimentBuilder PID: {os.getpid()}')
 
         cmds = []
