@@ -40,6 +40,7 @@ def waiting_worker(params):
     time.sleep(index + 5)
 
     if not dist_train:
+        n_gpus = 1
         while True:
             sorted_items = sorted(gpu_processes_count.items(), key=lambda item: item[1])
             gpu, count = sorted_items[0] # sort ASC by processes count

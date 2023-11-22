@@ -32,10 +32,12 @@ def main():
         debug=False,
         torchrun=True,
         scheduling=dict(
-            distributed_training=True,
+            distributed_training=False,
             gpus=[4, 5, 6, 7],
             max_jobs_per_gpu=4,
-            params_values=dict(seed=[111, 222], optim=['adam', 'sgd'])),
+            # params_values=dict(seed=[111, 222], optim=['adam', 'sgd'])
+            params_values=dict(seed=[1, 2, 3, 4], optim=['adam'])
+        ),
         param_name_for_exp_root_folder='root_folder',
         exp_folder=Template(os.path.join('./tmp', 'lr=${lr}_batchsize=${batchsize}_epochs=${epochs}_seed=${seed}_${optim}')))
 
