@@ -29,7 +29,7 @@ def backward_key_replace(key):
 
 def waiting_worker(params):
     # cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training']
-    index, cmd, root, cmd_dict, gpu_processes_count, gpus, max_jobs, dist_train, launch_blocking = params
+    index, cmd, root, cmd_dict, gpu_processes_count, gpus, max_jobs, dist_train, launch_blocking, torchrun = params
 
     # random.seed(None)
     # for _ in range(3):
@@ -65,18 +65,23 @@ def waiting_worker(params):
             if k.startswith('_'):
                 w.write(f'{k[1:]}={v}\n')
 
+    gpus = ",".join(map(str, gpus))
     if dist_train:
-        cvd = f'CUDA_VISIBLE_DEVICES={",".join(map(str, gpus))}'
+        cvd = f'CUDA_VISIBLE_DEVICES={gpus}'
     else:
-        cvd = f'CUDA_VISIBLE_DEVICES={gpu}'
+        cvd = f'CUDA_VISIBLE_DEVICES={gpu}' # the randomly chosen GPU
 
     clb = 'CUDA_LAUNCH_BLOCKING=1' if launch_blocking else ''
 
-    if not on_windows():
+    # if not on_windows():
+    if torchrun:
+        cmd = f'{clb} {cvd} torchrun --standalone --nnodes=1 --nproc-per-node={n_gpus} {cmd}'.strip()
+    else:
         cmd = f'{clb} {cvd} {cmd}'.strip()
 
     print(cmd)
-    os.system(cmd)
+    if not on_windows():
+        os.system(cmd)
 
     # state_file = os.path.join(root, 'state.finished')
     # with open(state_file, 'w') as w:
@@ -134,8 +139,10 @@ class ExperimentBuilder:
             param_name_for_exp_root_folder: str,
             scheduling: dict,
             debug: bool = False,
-            launch_blocking: bool = False):
+            launch_blocking: bool = False,
+            torchrun: bool = False):
         """
+        :param torchrun: whether to run with torchrun or not
         :param exp_folder: absolute path of the root folder where you want your experiments to be
         :param param_name_for_exp_root_folder: the cmd argument name for the output directory
         :param scheduling: a dictionary containing keys `gpus`, `max_jobs_per_gpu`, `params_values`
@@ -198,9 +205,14 @@ class ExperimentBuilder:
             root_folders.append(root_folder)
             cmds.append(self._build_command())
         if debug:
+            # if not on_windows():
+            #     if torchrun:
+            #         cmd = f'{clb} {cvd} torchrun --standalone --nnodes=1 --nproc-per-node={n_gpus} {cmd}'.strip()
+            #     else:
+            #         cmd = f'{clb} {cvd} {cmd}'.strip()
+
+            clb = 'CUDA_LAUNCH_BLOCKING=1' if launch_blocking else ''
             for cmd in cmds:
-                if launch_blocking:
-                    print('CUDA_LAUNCH_BLOCKING=1 ', end='')
                 print(cmd.replace('\\', '/'))
         else:
             manager = mp.Manager()
@@ -227,7 +239,7 @@ class ExperimentBuilder:
                 max_jobs_per_gpu = scheduling['max_jobs_per_gpu']
                 distributed_training = scheduling['distributed_training']
                 params_list = [
-                    (index, *tpl, gpu_processes_count, gpus, max_jobs_per_gpu, distributed_training, launch_blocking)
+                    (index, *tpl, gpu_processes_count, gpus, max_jobs_per_gpu, distributed_training, launch_blocking, torchrun)
                     for index, tpl in enumerate(params_list)
                 ]
 

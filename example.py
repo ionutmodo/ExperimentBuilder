@@ -29,9 +29,10 @@ def main():
     exp.add_param('TEST', Template('lr=${lr}_epochs=${epochs}_batchsize=${batchsize}_seed=${seed}'))
 
     exp.run(
-        debug=True,
+        debug=False,
+        torchrun=True,
         scheduling=dict(
-            distributed_training=False,
+            distributed_training=True,
             gpus=[4, 5, 6, 7],
             max_jobs_per_gpu=4,
             params_values=dict(seed=[111, 222], optim=['adam', 'sgd'])),
