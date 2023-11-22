@@ -76,7 +76,8 @@ def waiting_worker(params):
 
     # if not on_windows():
     if torchrun:
-        cmd = f'{clb} {cvd} torchrun --standalone --nnodes=1 --nproc-per-node={n_gpus} {cmd}'.strip()
+        single_proc_extra_args = '--rdzv-backend=c10d --rdzv-endpoint=localhost:0' if n_gpus == 1 else ''
+        cmd = f'{clb} {cvd} torchrun --standalone --nnodes=1 --nproc-per-node={n_gpus} {single_proc_extra_args} {cmd}'.strip()
     else:
         cmd = f'{clb} {cvd} python {cmd}'.strip()
 
