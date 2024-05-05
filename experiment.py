@@ -276,7 +276,7 @@ class ExperimentBuilder:
 
     def _build_command(self):
         params = []
-        dash_or_not = '--' if self.use_dashes else ''
+        dash_or_not = '--' if self.use_dashes else '@'
         for k, v in self.__dict__.items():
             if k.startswith('_'):
                 if isinstance(v, bool):  # we have a parameter that does not have a value, but its presence or absence means True or False
@@ -287,7 +287,7 @@ class ExperimentBuilder:
                     params.append(f'{dash_or_not}{backward_key_replace(k)}{self.sep}{self._fill_template(v)}')
                 else:
                     params.append(f'{dash_or_not}{backward_key_replace(k)}{self.sep}{str(v)}')
-        params = ' '.join(params).replace(f'{dash_or_not}_', f'{dash_or_not}')
+        params = ' '.join(params).replace(f'{dash_or_not}_', f'{dash_or_not}').replace('@', '')
         return f'{self.script} {params}'
 
     def __getattr__(self, item):
