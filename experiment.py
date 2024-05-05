@@ -29,7 +29,7 @@ def backward_key_replace(key):
 
 def waiting_worker(params):
     # cmd, root, cmd_dict, gpu_processes_count, scheduling['gpus'], scheduling['max_jobs_per_gpu'], scheduling['distributed_training']
-    index, cmd, root, cmd_dict, gpu_processes_count, gpus, max_jobs, dist_train, launch_blocking, torchrun = params
+    exe, index, cmd, root, cmd_dict, gpu_processes_count, gpus, max_jobs, dist_train, launch_blocking, torchrun = params
 
     # random.seed(None)
     # for _ in range(3):
@@ -79,7 +79,7 @@ def waiting_worker(params):
         single_proc_extra_args = '--rdzv-backend=c10d --rdzv-endpoint=localhost:0' if n_gpus == 1 else ''
         cmd = f'{clb} {cvd} torchrun --standalone --nnodes=1 --nproc-per-node={n_gpus} {single_proc_extra_args} {cmd}'.strip()
     else:
-        cmd = f'{clb} {cvd} python {cmd}'.strip()
+        cmd = f'{clb} {cvd} {exe} {cmd}'.strip()
 
     print(cmd)
     if not on_windows():
@@ -96,13 +96,16 @@ def waiting_worker(params):
 
 
 class ExperimentBuilder:
-    def __init__(self, script, defaults=None, verbose=True):
+    def __init__(self, script, exe='python', sep=' ', use_dashes=True, defaults=None, verbose=True):
         """
         :param script: path to script, rooted in home directory (it's automatically inserted as prefix)
         :param defaults: default cmd arguments that usually stay fixed
         :param CUDA_VISIBLE_DEVICES: value to initialize CUDA_VISIBLE_DEVICES env variable
         """
         self.script = script
+        self.exe = exe
+        self.sep = sep
+        self.use_dashes = use_dashes
         self.verbose = verbose
         self.exp_folder_template = None
 
@@ -234,7 +237,7 @@ class ExperimentBuilder:
                 max_jobs_per_gpu = scheduling['max_jobs_per_gpu']
                 distributed_training = scheduling['distributed_training']
                 params_list = [
-                    (index, *tpl, gpu_processes_count, gpus, max_jobs_per_gpu, distributed_training, launch_blocking, torchrun)
+                    (self.exe, index, *tpl, gpu_processes_count, gpus, max_jobs_per_gpu, distributed_training, launch_blocking, torchrun)
                     for index, tpl in enumerate(params_list)
                 ]
 
@@ -273,17 +276,18 @@ class ExperimentBuilder:
 
     def _build_command(self):
         params = []
+        dash_or_not = '--' if self.use_dashes else ''
         for k, v in self.__dict__.items():
             if k.startswith('_'):
                 if isinstance(v, bool):  # we have a parameter that does not have a value, but its presence or absence means True or False
                     if v:
-                        params.append(f'--{backward_key_replace(k)}')
+                        params.append(f'{dash_or_not}{backward_key_replace(k)}')
                 elif isinstance(v, Template):
                     # elif isinstance(v, str) and '${' in v:
-                    params.append(f'--{backward_key_replace(k)} {self._fill_template(v)}')
+                    params.append(f'{dash_or_not}{backward_key_replace(k)}{self.sep}{self._fill_template(v)}')
                 else:
-                    params.append(f'--{backward_key_replace(k)} {str(v)}')
-        params = ' '.join(params).replace('--_', '--')
+                    params.append(f'{dash_or_not}{backward_key_replace(k)}{self.sep}{str(v)}')
+        params = ' '.join(params).replace(f'{dash_or_not}_', f'{dash_or_not}')
         return f'{self.script} {params}'
 
     def __getattr__(self, item):
