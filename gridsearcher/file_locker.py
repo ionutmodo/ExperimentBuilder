@@ -1,5 +1,4 @@
 import os
-import time
 
 
 LOCK_FILE = 'locker.lock'
