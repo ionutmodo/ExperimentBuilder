@@ -2,8 +2,6 @@ import multiprocessing as mp
 from string import Template
 from itertools import product
 from copy import deepcopy
-from tqdm import tqdm
-
 from .tools import *
 
 FW_DICT = {'.': 'DOT', '-': 'DASH'}

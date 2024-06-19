@@ -1,7 +1,7 @@
 import os
 from string import Template
 from datetime import datetime
-from gridsearcher import GridSearcher, GSExe, GSKeyValSep
+from gridsearcher import GridSearcher
 
 def main():
     gs = GridSearcher(
